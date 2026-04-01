@@ -1,0 +1,315 @@
+{
+  "nav": {
+    "forCompanies": "Para Empresas",
+    "forCandidates": "Para Candidatos",
+    "login": "Iniciar sesión",
+    "register": "Comenzar"
+  },
+  "landing": {
+    "hero": {
+      "badge": "Reclutamiento impulsado por IA",
+      "title": "Encuentra el talento correcto,",
+      "titleHighlight": "más rápido.",
+      "subtitle": "candydatos.com conecta empresas con los mejores candidatos a través de ofertas laborales inteligentes y evaluaciones psicométricas con IA.",
+      "cta_company": "Publicar oferta",
+      "cta_candidate": "Buscar trabajo",
+      "stats_companies": "Empresas",
+      "stats_candidates": "Candidatos",
+      "stats_placed": "Contrataciones"
+    },
+    "how": {
+      "title": "¿Cómo funciona?",
+      "subtitle": "Un proceso simple para empresas y candidatos",
+      "company_title": "Para Empresas",
+      "candidate_title": "Para Candidatos",
+      "steps_company": [
+        { "title": "Crea el perfil de tu empresa", "desc": "Regístrate y configura tu empresa en minutos." },
+        { "title": "Publica vacantes", "desc": "Describe el cargo, rango salarial y requisitos." },
+        { "title": "Recibe y filtra candidatos", "desc": "Revisa postulantes, asigna reclutadores y haz seguimiento." },
+        { "title": "Evalúa con IA", "desc": "Gemini AI evalúa compatibilidad y tests psicométricos automáticamente." }
+      ],
+      "steps_candidate": [
+        { "title": "Crea tu perfil", "desc": "Regístrate y sube tu hoja de vida — la IA completa los detalles." },
+        { "title": "Explora vacantes abiertas", "desc": "Filtra por salario, país, modalidad y palabras clave." },
+        { "title": "Aplica en pocos clics", "desc": "Selecciona tu hoja de vida; la IA valida si cumples los requisitos." },
+        { "title": "Sigue tus aplicaciones", "desc": "Ve el estado y los comentarios del reclutador en tiempo real." }
+      ]
+    },
+    "features": {
+      "title": "Todo lo que necesitas para contratar mejor",
+      "items": [
+        { "title": "Análisis de HV con IA", "desc": "Gemini API extrae habilidades, experiencia y educación de cualquier hoja de vida y sugiere mejoras." },
+        { "title": "Validación de compatibilidad", "desc": "Antes de aplicar, la IA verifica si el candidato cumple los requisitos mínimos." },
+        { "title": "Tests psicométricos", "desc": "Tests de personalidad Big Five evaluados automáticamente por IA con retroalimentación detallada." },
+        { "title": "Seguimiento en tiempo real", "desc": "Cada paso se guarda en tiempo real — los candidatos pueden retomar donde lo dejaron." },
+        { "title": "Multi-reclutador", "desc": "Invita colegas a tu cuenta de empresa y asígnalos a vacantes específicas." },
+        { "title": "Dashboard de analytics", "desc": "Visualiza el embudo de candidatos y compara perfiles de personalidad." }
+      ]
+    },
+    "portals": {
+      "title": "Elige tu portal",
+      "company": {
+        "title": "Portal de Empresas",
+        "desc": "Publica vacantes, gestiona candidatos y evalúa con IA.",
+        "login": "Entrar como Empresa",
+        "register": "Registrar Empresa"
+      },
+      "candidate": {
+        "title": "Portal de Candidatos",
+        "desc": "Encuentra tu próxima oportunidad y aplica con ayuda de la IA.",
+        "login": "Entrar como Candidato",
+        "register": "Registrarse como Candidato"
+      }
+    },
+    "footer": "© 2025 candydatos.com — Todos los derechos reservados."
+  },
+  "auth": {
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "fullName": "Nombre completo",
+    "signIn": "Iniciar sesión",
+    "signUp": "Crear cuenta",
+    "noAccount": "¿No tienes cuenta?",
+    "haveAccount": "¿Ya tienes cuenta?",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "errors": {
+      "emailRequired": "El correo es requerido",
+      "emailInvalid": "Ingresa un correo válido",
+      "passwordRequired": "La contraseña es requerida",
+      "passwordMin": "Mínimo 6 caracteres",
+      "passwordMatch": "Las contraseñas no coinciden",
+      "nameRequired": "El nombre es requerido"
+    }
+  },
+  "setup": {
+    "title": "Configura tu empresa",
+    "invitations": "Invitaciones pendientes",
+    "noInvitations": "Sin invitaciones pendientes",
+    "acceptInvite": "Aceptar invitación",
+    "createNew": "Crear nueva empresa",
+    "or": "o",
+    "companyName": "Nombre de la empresa",
+    "sector": "Sector de la industria",
+    "bio": "Descripción",
+    "taxIdType": "Tipo de identificación tributaria",
+    "taxIdNumber": "Número de identificación tributaria",
+    "website": "Sitio web (opcional)",
+    "submit": "Crear empresa",
+    "roleLabel": "Rol"
+  },
+  "company": {
+    "dashboard": {
+      "title": "Dashboard",
+      "totalJobs": "Total de vacantes",
+      "activeJobs": "Activas",
+      "totalApplicants": "Total de candidatos",
+      "hired": "Contratados"
+    },
+    "jobs": {
+      "title": "Ofertas Laborales",
+      "new": "Nueva oferta",
+      "edit": "Editar",
+      "delete": "Eliminar",
+      "status": "Estado",
+      "applicants": "Candidatos",
+      "deadline": "Fecha límite",
+      "empty": "Aún no hay ofertas. ¡Crea la primera!"
+    },
+    "jobForm": {
+      "titleField": "Título del cargo",
+      "description": "Descripción",
+      "modality": "Modalidad de trabajo",
+      "minSalary": "Salario mínimo",
+      "maxSalary": "Salario máximo",
+      "experience": "Años de experiencia requeridos",
+      "maxApplicants": "Máximo de candidatos",
+      "country": "País",
+      "deadline": "Fecha límite de aplicaciones",
+      "benefits": "Beneficios (separados por coma)",
+      "requiredTest": "Test requerido (opcional)",
+      "noTest": "Sin test",
+      "save": "Guardar oferta",
+      "remote": "Remoto",
+      "onsite": "Presencial",
+      "hybrid": "Híbrido"
+    },
+    "applicants": {
+      "title": "Candidatos",
+      "filter": "Filtrar por estado",
+      "assign": "Asignar manager",
+      "assignManager": "Asignar manager",
+      "selectManager": "Seleccionar manager",
+      "noManager": "Sin asignar",
+      "assignedTo": "Asignado a",
+      "feedback": "Dejar comentario",
+      "accept": "Aceptar",
+      "reject": "Rechazar",
+      "score": "Puntaje",
+      "appliedAt": "Aplicó",
+      "empty": "Aún no hay candidatos"
+    },
+    "analytics": {
+      "title": "Analytics",
+      "funnel": "Embudo de candidatos",
+      "bigFive": "Big Five (OCEAN)",
+      "bigFiveDesc": "Promedio de rasgos de personalidad de todos los candidatos evaluados.",
+      "ei": "Inteligencia Emocional",
+      "eiDesc": "Promedio de dimensiones de IE de todos los candidatos evaluados."
+    },
+    "invite": {
+      "title": "Invitar usuario",
+      "emailLabel": "Correo electrónico",
+      "roleLabel": "Rol",
+      "send": "Enviar invitación",
+      "sent": "¡Invitación enviada!",
+      "admin": "Administrador",
+      "recruiter": "Reclutador"
+    },
+    "tests": {
+      "title": "Tests",
+      "catalogDesc": "Estos tests psicométricos están disponibles para todas las empresas. Asócialos a tus ofertas desde el formulario de creación de vacantes.",
+      "questions": "preguntas",
+      "dimensions": "Dimensiones",
+      "new": "Nuevo test",
+      "nameLabel": "Nombre del test",
+      "instructions": "Instrucciones",
+      "duration": "Duración (minutos)",
+      "minutes": "min",
+      "empty": "Aún no hay tests. Crea el primero.",
+      "id": "ID del test"
+    }
+  },
+  "candidate": {
+    "profile": {
+      "title": "Mi Perfil",
+      "completion": "Completitud del perfil",
+      "completeToApply": "Completa tu perfil para aplicar a ofertas",
+      "firstName": "Nombre",
+      "lastName": "Apellido",
+      "phone": "Teléfono",
+      "city": "Ciudad",
+      "country": "País",
+      "idType": "Tipo de documento",
+      "idNumber": "Número de documento",
+      "save": "Guardar perfil"
+    },
+    "resume": {
+      "title": "Mis Hojas de Vida",
+      "upload": "Subir hoja de vida",
+      "uploading": "Subiendo y analizando...",
+      "suggestions": "Sugerencias de la IA",
+      "extracted": "Información extraída",
+      "name": "Nombre de la hoja de vida",
+      "delete": "Eliminar",
+      "empty": "Aún no tienes hojas de vida. Sube una para comenzar.",
+      "noAiData": "Análisis de IA no disponible para este documento."
+    },
+    "jobs": {
+      "title": "Ofertas Laborales",
+      "search": "Buscar por cargo o palabra clave",
+      "country": "País",
+      "modality": "Modalidad",
+      "salary": "Salario mínimo",
+      "sortBy": "Ordenar por",
+      "sortDate": "Más recientes",
+      "sortSalary": "Mayor salario",
+      "apply": "Aplicar ahora",
+      "applied": "Ya aplicaste",
+      "deadline": "Fecha límite",
+      "experience": "Experiencia requerida",
+      "salary_range": "Salario",
+      "empty": "No hay vacantes abiertas que coincidan con tu búsqueda"
+    },
+    "apply": {
+      "step1": "Seleccionar HV",
+      "step2": "Validación",
+      "step3": "Test",
+      "step4": "Enviada",
+      "selectResume": "Elige una hoja de vida para esta aplicación",
+      "continue": "Continuar",
+      "checking": "Validando compatibilidad con IA...",
+      "fitPassed": "¡Cumples los requisitos mínimos!",
+      "fitFailed": "No cumples los requisitos mínimos",
+      "fitExperience": "Experiencia",
+      "fitSkills": "Habilidades",
+      "fitEducation": "Educación",
+      "fitSkillsMatch": "Habilidades detectadas",
+      "fitStrengths": "Fortalezas",
+      "fitImprovements": "Áreas de mejora",
+      "startTest": "Iniciar test",
+      "generatingTest": "Generando preguntas personalizadas con IA...",
+      "testReady": "Tu test está listo. Pulsa el botón para comenzar.",
+      "answered": "respondidas",
+      "answerAll": "Responde todas las preguntas para continuar",
+      "submitTest": "Enviar respuestas",
+      "successTitle": "¡Aplicación enviada!",
+      "successDesc": "Te notificaremos sobre cualquier novedad.",
+      "backToJobs": "Volver a las ofertas",
+      "changeResume": "Cambiar hoja de vida"
+    },
+    "applications": {
+      "title": "Mis Aplicaciones",
+      "empty": "Aún no has aplicado a ninguna oferta",
+      "status_Draft": "Borrador",
+      "status_Pending": "Pendiente",
+      "status_Reviewed": "Revisada",
+      "status_Testing": "En pruebas",
+      "status_Rejected": "Rechazada",
+      "status_Hired": "Contratado/a",
+      "feedback": "Comentario del reclutador",
+      "resume": "Hoja de vida",
+      "score": "Puntaje"
+    }
+  },
+  "tests": {
+    "catalog": {
+      "bigFive": {
+        "name": "Big Five (OCEAN)",
+        "desc": "Evalúa los 5 grandes rasgos de personalidad: Apertura, Responsabilidad, Extraversión, Amabilidad y Neuroticismo."
+      },
+      "ei": {
+        "name": "Inteligencia Emocional",
+        "desc": "Evalúa las 5 dimensiones de IE: Autoconciencia, Autorregulación, Motivación, Empatía y Habilidades Sociales."
+      }
+    },
+    "dimensions": {
+      "openness": "Apertura",
+      "conscientiousness": "Responsabilidad",
+      "extraversion": "Extraversión",
+      "agreeableness": "Amabilidad",
+      "neuroticism": "Neuroticismo",
+      "self_awareness": "Autoconciencia",
+      "self_regulation": "Autorregulación",
+      "motivation": "Motivación",
+      "empathy": "Empatía",
+      "social_skills": "Habilidades Sociales"
+    },
+    "likert": {
+      "stronglyDisagree": "Muy en desacuerdo",
+      "stronglyAgree": "Muy de acuerdo"
+    }
+  },
+  "common": {
+    "loading": "Cargando...",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "close": "Cerrar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "confirm": "Confirmar",
+    "search": "Buscar",
+    "all": "Todos",
+    "darkMode": "Modo oscuro",
+    "lightMode": "Modo claro",
+    "language": "Idioma",
+    "logout": "Cerrar sesión",
+    "settings": "Configuración",
+    "noData": "Sin datos disponibles",
+    "error": "Algo salió mal. Intenta de nuevo.",
+    "view": "Ver documento",
+    "retrying": "Reintentando..."
+  }
+}

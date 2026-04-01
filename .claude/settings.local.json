@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "WebSearch",
+      "WebFetch(domain:firebase.google.com)",
+      "Bash(npm list:*)",
+      "Bash(firebase --version)"
+    ]
+  }
+}

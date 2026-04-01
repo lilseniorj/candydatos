@@ -1,0 +1,91 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return request.auth.uid == uid;
+    }
+
+    // True when the signed-in user belongs to the given company
+    function isCompanyUser(companyId) {
+      return isAuth() &&
+        exists(/databases/$(database)/documents/company_users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/company_users/$(request.auth.uid)).data.company_id == companyId;
+    }
+
+    // True when the signed-in user is any company user (has a company_users doc)
+    function isAnyCompanyUser() {
+      return isAuth() &&
+        exists(/databases/$(database)/documents/company_users/$(request.auth.uid));
+    }
+
+    // ── companies ────────────────────────────────────────────────────────────
+    match /companies/{companyId} {
+      allow read:   if isAuth(); // candidates need to see company name/logo on job cards
+      allow create: if isAuth();
+      allow update: if isCompanyUser(companyId);
+    }
+
+    // ── company_users ────────────────────────────────────────────────────────
+    match /company_users/{userId} {
+      // Own document: full read/write
+      // Same-company member: read only (needed for getCompanyUsers query)
+      allow read: if isOwner(userId) ||
+        (isAuth() &&
+          exists(/databases/$(database)/documents/company_users/$(request.auth.uid)) &&
+          resource.data.company_id ==
+            get(/databases/$(database)/documents/company_users/$(request.auth.uid)).data.company_id);
+      allow write: if isOwner(userId);
+    }
+
+    // ── company_invitations ──────────────────────────────────────────────────
+    match /company_invitations/{invId} {
+      allow read:   if isAuth();
+      allow create: if isAuth();
+      allow update: if isAuth();
+    }
+
+    // ── candidates ───────────────────────────────────────────────────────────
+    match /candidates/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // ── candidate_resumes ────────────────────────────────────────────────────
+    match /candidate_resumes/{resumeId} {
+      allow read, write: if isAuth() &&
+        (resource == null || resource.data.candidate_id == request.auth.uid);
+    }
+
+    // ── job_offers ───────────────────────────────────────────────────────────
+    match /job_offers/{jobId} {
+      allow read:                    if true; // public
+      allow create, update, delete:  if isAnyCompanyUser();
+    }
+
+    // ── tests ─────────────────────────────────────────────────────────────────
+    match /tests/{testId} {
+      allow read:                    if isAuth();
+      allow create, update, delete:  if isAnyCompanyUser();
+    }
+
+    // ── applications ─────────────────────────────────────────────────────────
+    match /applications/{appId} {
+      allow read:   if isAuth();
+      allow create: if isAuth() &&
+        request.resource.data.candidate_id == request.auth.uid;
+      allow update: if isAuth();
+    }
+
+    // ── test_results ─────────────────────────────────────────────────────────
+    match /test_results/{resultId} {
+      allow read:   if isAuth();
+      allow create: if isAuth();
+    }
+  }
+}

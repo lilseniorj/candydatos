@@ -1,26 +1,105 @@
-# candydatos.com — Esquema de Base de Datos
+# candydatos.com
 
-Plataforma de reclutamiento que conecta empresas con candidatos a través de ofertas laborales y evaluaciones psicométricas (Test Big Five).
+Plataforma de reclutamiento inteligente que conecta empresas con candidatos a través de ofertas laborales y evaluaciones psicométricas con IA (Big Five).
 
 ---
 
-## Tecnología
+## Stack tecnológico
 
-| Layer          | Technology                                    |
-|----------------|-----------------------------------------------|
-| Database       | Google Cloud Firestore (NoSQL)                |
-| Authentication | Firebase Auth — email/password flow           |
+| Capa | Tecnología |
+|------|------------|
+| Framework | React 19 + Vite |
+| Estilos | TailwindCSS v4 (`@tailwindcss/vite`) |
+| Enrutamiento | react-router-dom v7 |
+| Formularios | react-hook-form |
+| Autenticación | Firebase Auth — email/password flow |
+| Base de datos | Cloud Firestore (NoSQL) |
+| Almacenamiento | Firebase Storage |
+| IA generativa | Gemini API (`@google/generative-ai`) |
+| Internacionalización | react-i18next + i18next-browser-languagedetector |
+| Gráficas | recharts |
+| Fuente | Inter (Google Fonts) |
+
+---
+
+## Configuración inicial
+
+1. Copia `.env.example` a `.env` y completa las variables:
+
+```
+VITE_FIREBASE_API_KEY=
+VITE_FIREBASE_AUTH_DOMAIN=
+VITE_FIREBASE_PROJECT_ID=
+VITE_FIREBASE_STORAGE_BUCKET=
+VITE_FIREBASE_MESSAGING_SENDER_ID=
+VITE_FIREBASE_APP_ID=
+VITE_GEMINI_API_KEY=
+```
+
+2. Instala dependencias:
+```bash
+npm install
+```
+
+3. Inicia el servidor de desarrollo:
+```bash
+npm run dev
+```
+
+---
+
+## Estructura del proyecto
+
+```
+src/
+├── i18n/               # Internacionalización (en/es)
+├── firebase/           # Configuración de Firebase
+├── context/            # AuthContext, ThemeContext, CompanyContext
+├── services/           # Lógica de negocio (Firestore + Gemini)
+├── router/             # Rutas y guards de acceso
+├── layouts/            # AuthLayout, CompanyLayout, CandidateLayout
+├── pages/
+│   ├── public/         # Landing page
+│   ├── auth/           # Login y registro (ambos portales)
+│   ├── company/        # Dashboard, ofertas, candidatos, analytics
+│   └── candidate/      # Perfil, hojas de vida, vacantes, aplicaciones
+├── components/
+│   ├── ui/             # Button, Input, Card, Badge, Modal, etc.
+│   └── layout/         # ThemeToggle, LanguageToggle
+└── utils/              # profileCompletion, etc.
+```
+
+---
+
+## Portales
 
 La aplicación tiene dos portales de acceso separados:
 
-| Portal             | Users               | Collection      | Entry point        |
-|--------------------|---------------------|-----------------|--------------------|
-| **Company Portal** | Recruiters / Admins | `company_users` | `/company/login`   |
-| **Candidate Portal** | Job seekers       | `candidates`    | `/candidate/login` |
+| Portal | Users | Collection | Entry point |
+|--------|-------|------------|-------------|
+| **Company Portal** | Recruiters / Admins | `company_users` | `/company/login` |
+| **Candidate Portal** | Job seekers | `candidates` | `/candidate/login` |
 
 Ambos portales usan Firebase Auth con correo y contraseña. El documento en Firestore usa el `uid` de Firebase como `id`. El campo `email` se copia desde Firebase Auth para facilitar las consultas — la fuente de verdad de las credenciales siempre es Firebase Auth.
 
 Al iniciar sesión, la app determina a qué portal pertenece el usuario buscando su `uid` en la colección correspondiente. Un `company_user` no puede acceder al portal de candidatos y viceversa.
+
+| Portal | URL | Descripción |
+|--------|-----|-------------|
+| Landing | `/` | Página pública con explicación de la plataforma y enlaces a ambos portales |
+| Empresa — Login | `/company/login` | Inicio de sesión para empresas |
+| Empresa — Registro | `/company/register` | Registro de nuevos usuarios empresa |
+| Empresa — Setup | `/company/setup` | Crear empresa o aceptar invitación |
+| Empresa — Dashboard | `/company/dashboard` | Resumen general |
+| Empresa — Ofertas | `/company/jobs` | Gestión de ofertas laborales |
+| Empresa — Candidatos | `/company/jobs/:id/applicants` | Candidatos por oferta |
+| Empresa — Analytics | `/company/analytics` | Dashboard psicométrico |
+| Candidato — Login | `/candidate/login` | Inicio de sesión para candidatos |
+| Candidato — Registro | `/candidate/register` | Registro de nuevos candidatos |
+| Candidato — Perfil | `/candidate/profile` | Perfil + hojas de vida |
+| Candidato — Vacantes | `/candidate/jobs` | Explorar y filtrar ofertas |
+| Candidato — Aplicar | `/candidate/apply/:jobId` | Flujo de aplicación paso a paso |
+| Candidato — Mis apps | `/candidate/applications` | Historial de aplicaciones |
 
 ---
 
@@ -125,191 +204,203 @@ El candidato tiene una página dedicada donde puede ver todas sus `applications`
 
 ---
 
-## Colecciones
+## Colecciones de Firestore
 
 ### 1. `companies`
 Datos de las empresas que publican ofertas laborales.
 
-| Field             | Type        | Description                              |
-|-------------------|-------------|------------------------------------------|
-| `id`              | `string`    | Firebase UID                             |
-| `commercial_name` | `string`    | Nombre comercial o de marca              |
-| `business_bio`    | `string`    | Descripción corta de la empresa          |
-| `industry_sector` | `string`    | Ej: `"Technology"`, `"Healthcare"`       |
-| `tax_id_type`     | `string`    | Ej: `"NIT"`, `"RUT"`                     |
-| `tax_id_number`   | `string`    | Número de identificación tributaria      |
-| `logo_url`        | `string`    | URL pública del logo de la empresa       |
-| `website_url`     | `string`    | Sitio web de la empresa                  |
-| `created_at`      | `timestamp` | Fecha de creación de la cuenta           |
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | `string` | Firebase UID |
+| `commercial_name` | `string` | Nombre comercial o de marca |
+| `business_bio` | `string` | Descripción corta de la empresa |
+| `industry_sector` | `string` | Ej: `"Technology"`, `"Healthcare"` |
+| `tax_id_type` | `string` | Ej: `"NIT"`, `"RUT"` |
+| `tax_id_number` | `string` | Número de identificación tributaria |
+| `logo_url` | `string` | URL pública del logo de la empresa |
+| `website_url` | `string` | Sitio web de la empresa |
+| `created_at` | `timestamp` | Fecha de creación de la cuenta |
 
 ---
 
 ### 2. `company_users`
 Administradores y reclutadores que pertenecen a una empresa.
 
-| Field        | Type        | Description                              |
-|--------------|-------------|------------------------------------------|
-| `id`         | `string`    | Firebase UID                             |
-| `company_id` | `string`    | Referencia a `companies`                 |
-| `full_name`  | `string`    | Nombre del reclutador                    |
-| `email`      | `string`    | Correo electrónico de trabajo            |
-| `role`       | `string`    | `"admin"` o `"recruiter"`                |
-| `created_at` | `timestamp` | Fecha de creación de la cuenta           |
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | `string` | Firebase UID |
+| `company_id` | `string` | Referencia a `companies` |
+| `full_name` | `string` | Nombre del reclutador |
+| `email` | `string` | Correo electrónico de trabajo |
+| `role` | `string` | `"admin"` o `"recruiter"` |
+| `created_at` | `timestamp` | Fecha de creación de la cuenta |
 
 ---
 
 ### 3. `company_invitations`
 Invitaciones pendientes enviadas por un admin a nuevos usuarios de la empresa.
 
-| Field          | Type        | Description                                                    |
-|----------------|-------------|----------------------------------------------------------------|
-| `id`           | `string`    | ID generado automáticamente                                    |
-| `company_id`   | `string`    | Referencia a `companies`                                       |
-| `invited_by`   | `string`    | Referencia a `company_users` (admin que envió la invitación)   |
-| `email`        | `string`    | Correo del invitado                                            |
-| `role`         | `string`    | Rol asignado al aceptar: `"admin"` o `"recruiter"`             |
-| `status`       | `string`    | `"Pending"`, `"Accepted"` o `"Expired"`                        |
-| `expires_at`   | `timestamp` | Fecha de vencimiento de la invitación                          |
-| `created_at`   | `timestamp` | Fecha en que se envió la invitación                            |
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | `string` | ID generado automáticamente |
+| `company_id` | `string` | Referencia a `companies` |
+| `invited_by` | `string` | Referencia a `company_users` (admin que envió la invitación) |
+| `email` | `string` | Correo del invitado |
+| `role` | `string` | Rol asignado al aceptar: `"admin"` o `"recruiter"` |
+| `status` | `string` | `"Pending"`, `"Accepted"` o `"Expired"` |
+| `expires_at` | `timestamp` | Fecha de vencimiento de la invitación |
+| `created_at` | `timestamp` | Fecha en que se envió la invitación |
 
 ---
 
 ### 4. `candidates`
 Datos de los candidatos que buscan empleo.
 
-| Field                   | Type        | Description                                                 |
-|-------------------------|-------------|-------------------------------------------------------------|
-| `id`                    | `string`    | Firebase UID                                                |
-| `first_name`            | `string`    | Nombre del candidato                                        |
-| `last_name`             | `string`    | Apellido del candidato                                      |
-| `email`                 | `string`    | Correo electrónico de contacto                              |
-| `phone`                 | `string`    | Teléfono de contacto                                        |
-| `identification_type`   | `string`    | `"CC"`, `"CE"` o `"Passport"`                               |
-| `identification_number` | `string`    | Número del documento de identidad                           |
-| `city`                  | `string`    | Ciudad de residencia actual                                 |
-| `country`               | `string`    | País de residencia                                          |
-| `profile_completion_pct`| `number`    | Porcentaje de perfil completado (0–100), se actualiza al guardar |
-| `created_at`            | `timestamp` | Fecha de creación de la cuenta                              |
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | `string` | Firebase UID |
+| `first_name` | `string` | Nombre del candidato |
+| `last_name` | `string` | Apellido del candidato |
+| `email` | `string` | Correo electrónico de contacto |
+| `phone` | `string` | Teléfono de contacto |
+| `identification_type` | `string` | `"CC"`, `"CE"` o `"Passport"` |
+| `identification_number` | `string` | Número del documento de identidad |
+| `city` | `string` | Ciudad de residencia actual |
+| `country` | `string` | País de residencia |
+| `profile_completion_pct` | `number` | Porcentaje de perfil completado (0–100), se actualiza al guardar |
+| `created_at` | `timestamp` | Fecha de creación de la cuenta |
 
 ---
 
 ### 5. `candidate_resumes`
 Hojas de vida subidas por el candidato. Cada documento es procesado por Gemini API al momento de la carga.
 
-| Field            | Type        | Description                                                            |
-|------------------|-------------|------------------------------------------------------------------------|
-| `id`             | `string`    | ID generado automáticamente                                            |
-| `candidate_id`   | `string`    | Referencia a `candidates`                                              |
-| `name`           | `string`    | Nombre que el candidato le da a esta hoja de vida                      |
-| `document_url`   | `string`    | URL de Firebase Storage del archivo subido                             |
-| `extracted_data` | `map`       | Información básica extraída por Gemini (ver detalle abajo)             |
-| `suggestions`    | `array`     | Lista de recomendaciones de mejora generadas por Gemini                |
-| `created_at`     | `timestamp` | Fecha de carga                                                         |
-| `updated_at`     | `timestamp` | Última vez que Gemini reprocesó o el usuario actualizó el documento    |
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | `string` | ID generado automáticamente |
+| `candidate_id` | `string` | Referencia a `candidates` |
+| `name` | `string` | Nombre que el candidato le da a esta hoja de vida |
+| `document_url` | `string` | URL de Firebase Storage del archivo subido |
+| `extracted_data` | `map` | Información básica extraída por Gemini (ver detalle abajo) |
+| `suggestions` | `array` | Lista de recomendaciones de mejora generadas por Gemini |
+| `created_at` | `timestamp` | Fecha de carga |
+| `updated_at` | `timestamp` | Última vez que Gemini reprocesó o el usuario actualizó el documento |
 
 #### `extracted_data` — campos extraídos por Gemini
 
-| Field          | Type     | Description                                         |
-|----------------|----------|-----------------------------------------------------|
-| `full_name`    | `string` | Nombre detectado en el documento                    |
-| `email`        | `string` | Correo detectado en el documento                    |
-| `phone`        | `string` | Teléfono detectado en el documento                  |
-| `skills`       | `array`  | Lista de habilidades identificadas                  |
-| `experience`   | `array`  | Experiencia laboral (cargo, empresa, años)          |
-| `education`    | `array`  | Estudios (título, institución)                      |
-| `summary`      | `string` | Resumen profesional extraído del documento          |
+| Field | Type | Description |
+|-------|------|-------------|
+| `full_name` | `string` | Nombre detectado en el documento |
+| `email` | `string` | Correo detectado en el documento |
+| `phone` | `string` | Teléfono detectado en el documento |
+| `skills` | `array` | Lista de habilidades identificadas |
+| `experience` | `array` | Experiencia laboral (cargo, empresa, años) |
+| `education` | `array` | Estudios (título, institución) |
+| `summary` | `string` | Resumen profesional extraído del documento |
 
 ---
 
 ### 6. `job_offers`
 Ofertas laborales publicadas por las empresas.
 
-| Field                      | Type        | Description                                           |
-|----------------------------|-------------|-------------------------------------------------------|
-| `id`                       | `string`    | ID generado automáticamente                           |
-| `company_id`               | `string`    | Referencia a `companies`                              |
-| `title`                    | `string`    | Título del cargo                                      |
-| `description`              | `string`    | Descripción completa del puesto                       |
-| `benefits`                 | `array`     | Lista de beneficios ofrecidos                         |
-| `work_modality`            | `string`    | `"Remote"`, `"On-site"` o `"Hybrid"`                  |
-| `status`                   | `string`    | `"Active"`, `"Paused"` o `"Closed"`                   |
-| `min_salary`               | `number`    | Salario mínimo ofrecido                               |
-| `max_salary`               | `number`    | Salario máximo ofrecido                               |
-| `years_experience_required`| `number`    | Años mínimos de experiencia requeridos                |
-| `max_applicants`           | `number`    | Número máximo de aplicaciones aceptadas               |
-| `country`                  | `string`    | País donde está basado el puesto                      |
-| `required_test_id`         | `string`    | Referencia a `tests` (opcional)                       |
-| `application_deadline`     | `timestamp` | Fecha límite para aplicar                             |
-| `created_at`               | `timestamp` | Fecha en que se publicó la oferta                     |
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | `string` | ID generado automáticamente |
+| `company_id` | `string` | Referencia a `companies` |
+| `title` | `string` | Título del cargo |
+| `description` | `string` | Descripción completa del puesto |
+| `benefits` | `array` | Lista de beneficios ofrecidos |
+| `work_modality` | `string` | `"Remote"`, `"On-site"` o `"Hybrid"` |
+| `status` | `string` | `"Active"`, `"Paused"` o `"Closed"` |
+| `min_salary` | `number` | Salario mínimo ofrecido |
+| `max_salary` | `number` | Salario máximo ofrecido |
+| `years_experience_required` | `number` | Años mínimos de experiencia requeridos |
+| `max_applicants` | `number` | Número máximo de aplicaciones aceptadas |
+| `country` | `string` | País donde está basado el puesto |
+| `required_test_id` | `string` | Referencia a `tests` (opcional) |
+| `application_deadline` | `timestamp` | Fecha límite para aplicar |
+| `created_at` | `timestamp` | Fecha en que se publicó la oferta |
 
 ---
 
 ### 7. `tests`
 Catálogo de evaluaciones psicométricas y técnicas disponibles.
 
-| Field              | Type     | Description                                      |
-|--------------------|----------|--------------------------------------------------|
-| `id`               | `string` | Ej: `"big_five_v1"`                              |
-| `name`             | `string` | Nombre legible del test                          |
-| `instructions`     | `string` | Instrucciones que se muestran al candidato       |
-| `duration_minutes` | `number` | Tiempo disponible para completar el test         |
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | `string` | Ej: `"big_five_v1"` |
+| `name` | `string` | Nombre legible del test |
+| `instructions` | `string` | Instrucciones que se muestran al candidato |
+| `duration_minutes` | `number` | Tiempo disponible para completar el test |
 
 ---
 
 ### 8. `applications`
 Vincula a un candidato con una oferta laboral (una por candidato por oferta). Se crea como borrador en el primer paso y se actualiza en tiempo real en cada paso siguiente.
 
-| Field                   | Type        | Description                                                                      |
-|-------------------------|-------------|----------------------------------------------------------------------------------|
-| `id`                    | `string`    | ID generado automáticamente                                                      |
-| `candidate_id`          | `string`    | Referencia a `candidates`                                                        |
-| `job_offer_id`          | `string`    | Referencia a `job_offers`                                                        |
-| `resume_id`             | `string`    | Referencia a `candidate_resumes` seleccionada para esta aplicación               |
-| `status`                | `string`    | `"Draft"`, `"Pending"`, `"Reviewed"`, `"Testing"`, `"Rejected"`, `"Hired"`       |
-| `current_step`          | `string`    | `"cv_selection"`, `"fit_check"`, `"test"` o `"submitted"`                        |
-| `fit_check`             | `map`       | Resultado de la validación de Gemini (ver detalle abajo)                         |
-| `reviewer_id`           | `string`    | Referencia a `company_users` asignado a esta aplicación (opcional)               |
-| `feedback_to_candidate` | `string`    | Comentario del reclutador visible para el candidato (opcional)                   |
-| `applied_at`            | `timestamp` | Fecha en que el candidato envió la aplicación completa                           |
-| `updated_at`            | `timestamp` | Última actualización en tiempo real (se actualiza en cada cambio de paso)        |
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | `string` | ID generado automáticamente |
+| `candidate_id` | `string` | Referencia a `candidates` |
+| `job_offer_id` | `string` | Referencia a `job_offers` |
+| `resume_id` | `string` | Referencia a `candidate_resumes` seleccionada para esta aplicación |
+| `status` | `string` | `"Draft"`, `"Pending"`, `"Reviewed"`, `"Testing"`, `"Rejected"`, `"Hired"` |
+| `current_step` | `string` | `"cv_selection"`, `"fit_check"`, `"test"` o `"submitted"` |
+| `fit_check` | `map` | Resultado de la validación de Gemini (ver detalle abajo) |
+| `reviewer_id` | `string` | Referencia a `company_users` asignado a esta aplicación (opcional) |
+| `feedback_to_candidate` | `string` | Comentario del reclutador visible para el candidato (opcional) |
+| `applied_at` | `timestamp` | Fecha en que el candidato envió la aplicación completa |
+| `updated_at` | `timestamp` | Última actualización en tiempo real (se actualiza en cada cambio de paso) |
 
 #### `fit_check` — resultado de validación de Gemini
 
-| Field      | Type      | Description                                                               |
-|------------|-----------|---------------------------------------------------------------------------|
-| `passed`   | `boolean` | Si el candidato cumple los requisitos mínimos de la oferta                |
-| `score`    | `number`  | Porcentaje de compatibilidad estimado por Gemini (0–100)                  |
-| `feedback` | `string`  | Explicación de Gemini (se muestra al candidato si no aprobó)              |
+| Field | Type | Description |
+|-------|------|-------------|
+| `passed` | `boolean` | Si el candidato cumple los requisitos mínimos de la oferta |
+| `score` | `number` | Porcentaje de compatibilidad estimado por Gemini (0–100) |
+| `feedback` | `string` | Explicación de Gemini (se muestra al candidato si no aprobó) |
 
 ---
 
 ### 9. `test_results`
 Puntaje y metadatos de un test completado.
 
-| Field               | Type        | Description                                              |
-|---------------------|-------------|----------------------------------------------------------|
-| `id`                | `string`    | ID generado automáticamente                              |
-| `application_id`    | `string`    | Referencia a `applications`                              |
-| `test_id`           | `string`    | Referencia a `tests`                                     |
-| `score`             | `number`    | Puntaje general (0–100)                                  |
-| `trait_scores`      | `map`       | Desglose por dimensión (ver detalle abajo)               |
-| `gemini_evaluation` | `map`       | Evaluación cualitativa generada por Gemini (ver abajo)   |
-| `completed_at`      | `timestamp` | Fecha y hora en que se envió el test                     |
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | `string` | ID generado automáticamente |
+| `application_id` | `string` | Referencia a `applications` |
+| `test_id` | `string` | Referencia a `tests` |
+| `score` | `number` | Puntaje general (0–100) |
+| `trait_scores` | `map` | Desglose por dimensión (ver detalle abajo) |
+| `gemini_evaluation` | `map` | Evaluación cualitativa generada por Gemini (ver abajo) |
+| `completed_at` | `timestamp` | Fecha y hora en que se envió el test |
 
 #### `trait_scores` — dimensiones del Big Five
 
-| Field               | Type     | Description                                            |
-|---------------------|----------|--------------------------------------------------------|
-| `openness`          | `number` | Curiosidad y apertura a nuevas experiencias            |
-| `conscientiousness` | `number` | Organización, responsabilidad y disciplina             |
-| `extraversion`      | `number` | Sociabilidad y asertividad                             |
-| `agreeableness`     | `number` | Cooperación y empatía hacia los demás                  |
-| `neuroticism`       | `number` | Inestabilidad emocional y tendencia al estrés          |
+| Field | Type | Description |
+|-------|------|-------------|
+| `openness` | `number` | Curiosidad y apertura a nuevas experiencias |
+| `conscientiousness` | `number` | Organización, responsabilidad y disciplina |
+| `extraversion` | `number` | Sociabilidad y asertividad |
+| `agreeableness` | `number` | Cooperación y empatía hacia los demás |
+| `neuroticism` | `number` | Inestabilidad emocional y tendencia al estrés |
 
 #### `gemini_evaluation` — evaluación cualitativa de la IA
 
-| Field      | Type      | Description                                                         |
-|------------|-----------|---------------------------------------------------------------------|
-| `passed`   | `boolean` | Si el resultado supera el umbral mínimo definido por la empresa     |
-| `score`    | `number`  | Puntaje general asignado por Gemini (0–100)                         |
-| `feedback` | `string`  | Resumen narrativo de fortalezas y áreas de mejora                   |
+| Field | Type | Description |
+|-------|------|-------------|
+| `passed` | `boolean` | Si el resultado supera el umbral mínimo definido por la empresa |
+| `score` | `number` | Puntaje general asignado por Gemini (0–100) |
+| `feedback` | `string` | Resumen narrativo de fortalezas y áreas de mejora |
+
+---
+
+## Características principales
+
+- **Dark / Light mode** — Detecta preferencia del sistema, persiste en `localStorage`
+- **Bilingüe (ES/EN)** — Detecta idioma del navegador, cambio manual disponible
+- **100% responsive** — Sidebar colapsable en móvil para ambos portales
+- **Flujo de aplicación reanudable** — Guarda `current_step` en Firestore en tiempo real
+- **Gemini AI** — Extrae datos de HV, valida compatibilidad y evalúa tests automáticamente
+- **Guards de ruta** — Empresa y candidato no pueden acceder al portal contrario
+- **Progreso de perfil** — Barra de 0–100% (60% datos básicos + 40% al menos una HV)

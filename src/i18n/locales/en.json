@@ -1,0 +1,315 @@
+{
+  "nav": {
+    "forCompanies": "For Companies",
+    "forCandidates": "For Candidates",
+    "login": "Sign In",
+    "register": "Get Started"
+  },
+  "landing": {
+    "hero": {
+      "badge": "Recruitment powered by AI",
+      "title": "Find the right talent,",
+      "titleHighlight": "faster.",
+      "subtitle": "candydatos.com connects companies with the best candidates through intelligent job postings and AI-powered psychometric evaluations.",
+      "cta_company": "Post a Job",
+      "cta_candidate": "Find a Job",
+      "stats_companies": "Companies",
+      "stats_candidates": "Candidates",
+      "stats_placed": "Placements"
+    },
+    "how": {
+      "title": "How does it work?",
+      "subtitle": "A simple process for companies and candidates",
+      "company_title": "For Companies",
+      "candidate_title": "For Candidates",
+      "steps_company": [
+        { "title": "Create your company profile", "desc": "Register and set up your company in minutes." },
+        { "title": "Post job openings", "desc": "Describe the position, salary range and requirements." },
+        { "title": "Receive and filter applicants", "desc": "Review applicants, assign recruiters and track progress." },
+        { "title": "Evaluate with AI", "desc": "Let Gemini AI assess fit and psychometric tests automatically." }
+      ],
+      "steps_candidate": [
+        { "title": "Create your profile", "desc": "Register and upload your résumé — AI fills in the details." },
+        { "title": "Browse open positions", "desc": "Filter by salary, country, modality and keywords." },
+        { "title": "Apply in a few clicks", "desc": "Select your résumé; AI checks if you meet the requirements." },
+        { "title": "Track your applications", "desc": "See the status and recruiter feedback in real time." }
+      ]
+    },
+    "features": {
+      "title": "Everything you need to hire smarter",
+      "items": [
+        { "title": "AI Resume Analysis", "desc": "Gemini API extracts skills, experience and education from any résumé and suggests improvements." },
+        { "title": "Smart Fit Check", "desc": "Before a candidate applies, AI validates whether they meet the minimum requirements." },
+        { "title": "Psychometric Tests", "desc": "Big Five personality tests evaluated automatically by AI with detailed feedback." },
+        { "title": "Real-time Tracking", "desc": "Every step of the process is saved in real time — candidates can resume where they left off." },
+        { "title": "Multi-recruiter", "desc": "Invite colleagues to your company account and assign them to specific openings." },
+        { "title": "Analytics Dashboard", "desc": "Visualize the applicant funnel and compare personality profiles across candidates." }
+      ]
+    },
+    "portals": {
+      "title": "Choose your portal",
+      "company": {
+        "title": "Company Portal",
+        "desc": "Post jobs, manage applicants and evaluate candidates with AI.",
+        "login": "Sign in as Company",
+        "register": "Register Company"
+      },
+      "candidate": {
+        "title": "Candidate Portal",
+        "desc": "Find your next opportunity and apply with the help of AI.",
+        "login": "Sign in as Candidate",
+        "register": "Register as Candidate"
+      }
+    },
+    "footer": "© 2025 candydatos.com — All rights reserved."
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "fullName": "Full name",
+    "signIn": "Sign In",
+    "signUp": "Create account",
+    "noAccount": "Don't have an account?",
+    "haveAccount": "Already have an account?",
+    "forgotPassword": "Forgot password?",
+    "errors": {
+      "emailRequired": "Email is required",
+      "emailInvalid": "Enter a valid email",
+      "passwordRequired": "Password is required",
+      "passwordMin": "At least 6 characters",
+      "passwordMatch": "Passwords do not match",
+      "nameRequired": "Name is required"
+    }
+  },
+  "setup": {
+    "title": "Set up your company",
+    "invitations": "Pending invitations",
+    "noInvitations": "No pending invitations",
+    "acceptInvite": "Accept invitation",
+    "createNew": "Create new company",
+    "or": "or",
+    "companyName": "Company name",
+    "sector": "Industry sector",
+    "bio": "Description",
+    "taxIdType": "Tax ID type",
+    "taxIdNumber": "Tax ID number",
+    "website": "Website (optional)",
+    "submit": "Create company",
+    "roleLabel": "Role"
+  },
+  "company": {
+    "dashboard": {
+      "title": "Dashboard",
+      "totalJobs": "Total openings",
+      "activeJobs": "Active",
+      "totalApplicants": "Total applicants",
+      "hired": "Hired"
+    },
+    "jobs": {
+      "title": "Job Offers",
+      "new": "New offer",
+      "edit": "Edit",
+      "delete": "Delete",
+      "status": "Status",
+      "applicants": "Applicants",
+      "deadline": "Deadline",
+      "empty": "No job offers yet. Create the first one!"
+    },
+    "jobForm": {
+      "titleField": "Job title",
+      "description": "Description",
+      "modality": "Work modality",
+      "minSalary": "Min salary",
+      "maxSalary": "Max salary",
+      "experience": "Years of experience required",
+      "maxApplicants": "Max applicants",
+      "country": "Country",
+      "deadline": "Application deadline",
+      "benefits": "Benefits (comma separated)",
+      "requiredTest": "Required test (optional)",
+      "noTest": "No test",
+      "save": "Save offer",
+      "remote": "Remote",
+      "onsite": "On-site",
+      "hybrid": "Hybrid"
+    },
+    "applicants": {
+      "title": "Applicants",
+      "filter": "Filter by status",
+      "assign": "Assign manager",
+      "assignManager": "Assign manager",
+      "selectManager": "Select manager",
+      "noManager": "Unassigned",
+      "assignedTo": "Assigned to",
+      "feedback": "Leave feedback",
+      "accept": "Accept",
+      "reject": "Reject",
+      "score": "Score",
+      "appliedAt": "Applied",
+      "empty": "No applicants yet"
+    },
+    "analytics": {
+      "title": "Analytics",
+      "funnel": "Applicant funnel",
+      "bigFive": "Big Five (OCEAN)",
+      "bigFiveDesc": "Average personality trait scores across all evaluated candidates.",
+      "ei": "Emotional Intelligence",
+      "eiDesc": "Average EI dimension scores across all evaluated candidates."
+    },
+    "invite": {
+      "title": "Invite user",
+      "emailLabel": "Email address",
+      "roleLabel": "Role",
+      "send": "Send invitation",
+      "sent": "Invitation sent!",
+      "admin": "Admin",
+      "recruiter": "Recruiter"
+    },
+    "tests": {
+      "title": "Tests",
+      "catalogDesc": "These psychometric tests are available to all companies. Associate them with your job offers from the offer creation form.",
+      "questions": "questions",
+      "dimensions": "Dimensions",
+      "new": "New test",
+      "nameLabel": "Test name",
+      "instructions": "Instructions",
+      "duration": "Duration (minutes)",
+      "minutes": "min",
+      "empty": "No tests yet. Create the first one.",
+      "id": "Test ID"
+    }
+  },
+  "candidate": {
+    "profile": {
+      "title": "My Profile",
+      "completion": "Profile completion",
+      "completeToApply": "Complete your profile to apply for jobs",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "phone": "Phone",
+      "city": "City",
+      "country": "Country",
+      "idType": "ID type",
+      "idNumber": "ID number",
+      "save": "Save profile"
+    },
+    "resume": {
+      "title": "My Resumes",
+      "upload": "Upload resume",
+      "uploading": "Uploading and analyzing...",
+      "suggestions": "AI Suggestions",
+      "extracted": "Extracted information",
+      "name": "Resume name",
+      "delete": "Delete",
+      "empty": "No resumes yet. Upload one to get started.",
+      "noAiData": "AI analysis not available for this document."
+    },
+    "jobs": {
+      "title": "Job Openings",
+      "search": "Search by title or keyword",
+      "country": "Country",
+      "modality": "Modality",
+      "salary": "Min salary",
+      "sortBy": "Sort by",
+      "sortDate": "Most recent",
+      "sortSalary": "Highest salary",
+      "apply": "Apply now",
+      "applied": "Already applied",
+      "deadline": "Deadline",
+      "experience": "Experience required",
+      "salary_range": "Salary",
+      "empty": "No open positions match your search"
+    },
+    "apply": {
+      "step1": "Select resume",
+      "step2": "Fit check",
+      "step3": "Test",
+      "step4": "Submitted",
+      "selectResume": "Choose a resume for this application",
+      "continue": "Continue",
+      "checking": "Checking fit with AI...",
+      "fitPassed": "You meet the minimum requirements!",
+      "fitFailed": "You don't meet the minimum requirements",
+      "fitExperience": "Experience",
+      "fitSkills": "Skills",
+      "fitEducation": "Education",
+      "fitSkillsMatch": "Skills detected",
+      "fitStrengths": "Strengths",
+      "fitImprovements": "Areas to improve",
+      "startTest": "Start test",
+      "generatingTest": "Generating personalized questions with AI...",
+      "testReady": "Your test is ready. Press the button to begin.",
+      "answered": "answered",
+      "answerAll": "Answer all questions to continue",
+      "submitTest": "Submit answers",
+      "successTitle": "Application submitted!",
+      "successDesc": "We will notify you of any updates.",
+      "backToJobs": "Back to jobs",
+      "changeResume": "Change resume"
+    },
+    "applications": {
+      "title": "My Applications",
+      "empty": "You haven't applied to any offers yet",
+      "status_Draft": "Draft",
+      "status_Pending": "Pending",
+      "status_Reviewed": "Reviewed",
+      "status_Testing": "In testing",
+      "status_Rejected": "Rejected",
+      "status_Hired": "Hired",
+      "feedback": "Recruiter feedback",
+      "resume": "Resume",
+      "score": "Score"
+    }
+  },
+  "tests": {
+    "catalog": {
+      "bigFive": {
+        "name": "Big Five (OCEAN)",
+        "desc": "Evaluates the 5 major personality traits: Openness, Conscientiousness, Extraversion, Agreeableness, and Neuroticism."
+      },
+      "ei": {
+        "name": "Emotional Intelligence",
+        "desc": "Evaluates the 5 EI dimensions: Self-Awareness, Self-Regulation, Motivation, Empathy, and Social Skills."
+      }
+    },
+    "dimensions": {
+      "openness": "Openness",
+      "conscientiousness": "Conscientiousness",
+      "extraversion": "Extraversion",
+      "agreeableness": "Agreeableness",
+      "neuroticism": "Neuroticism",
+      "self_awareness": "Self-Awareness",
+      "self_regulation": "Self-Regulation",
+      "motivation": "Motivation",
+      "empathy": "Empathy",
+      "social_skills": "Social Skills"
+    },
+    "likert": {
+      "stronglyDisagree": "Strongly disagree",
+      "stronglyAgree": "Strongly agree"
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "confirm": "Confirm",
+    "search": "Search",
+    "all": "All",
+    "darkMode": "Dark mode",
+    "lightMode": "Light mode",
+    "language": "Language",
+    "logout": "Sign out",
+    "settings": "Settings",
+    "noData": "No data available",
+    "error": "Something went wrong. Please try again.",
+    "view": "View document",
+    "retrying": "Retrying..."
+  }
+}
