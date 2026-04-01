@@ -9,19 +9,14 @@ import {
   updateApplication,
   submitApplication,
 } from '../../services/applications'
-import { checkFit, generateTestQuestions, evaluateTestAnswers } from '../../services/gemini'
+import { checkFit } from '../../services/gemini'
 import { saveTestResult } from '../../services/testResults'
-import { getTestById } from '../../services/testCatalog'
+import LiveInterview from '../../components/interview/LiveInterview'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import Spinner from '../../components/ui/Spinner'
-import ProgressBar from '../../components/ui/ProgressBar'
-
 const STEPS    = ['cv_selection', 'fit_check', 'test', 'submitted']
 const STEP_IDX = { cv_selection: 0, fit_check: 1, test: 2, submitted: 3 }
-
-// ─── Likert helpers ──────────────────────────────────────────────────────────
-const LIKERT_VALUES = [1, 2, 3, 4, 5]
 
 // ─── Component ───────────────────────────────────────────────────────────────
 export default function ApplyFlow() {
@@ -38,11 +33,6 @@ export default function ApplyFlow() {
   const [processing, setProcessing]             = useState(false)
   const [fitResult, setFitResult]               = useState(null)
 
-  // Test state
-  const [testMeta, setTestMeta]                 = useState(null) // catalog entry
-  const [questions, setQuestions]                = useState([])
-  const [answers, setAnswers]                   = useState({})
-  const [generatingQuestions, setGeneratingQuestions] = useState(false)
   const [testError, setTestError]               = useState('')
 
   // ── Init ───────────────────────────────────────────────────────────────────
@@ -59,15 +49,6 @@ export default function ApplyFlow() {
       if (fetchedApp.fit_check) setFitResult(fetchedApp.fit_check)
       if (fetchedApp.resume_id)
         setSelectedResume(fetchedResumes.find(r => r.id === fetchedApp.resume_id))
-
-      // Restore saved test state (for resume capability)
-      if (fetchedApp.test_questions?.length) {
-        setQuestions(fetchedApp.test_questions)
-        setAnswers(fetchedApp.test_answers ?? {})
-      }
-      if (fetchedJob?.required_test_id) {
-        setTestMeta(getTestById(fetchedJob.required_test_id))
-      }
       setLoading(false)
     }
     init()
@@ -106,71 +87,23 @@ export default function ApplyFlow() {
     }
   }
 
-  // ── Step 3 pre: Generate test questions ────────────────────────────────────
-  async function handleStartTest() {
-    if (!testMeta) {
-      await handleFinalSubmit()
-      return
-    }
-
-    // If questions were already generated (resuming), go straight to test
-    if (questions.length) return
-
-    setGeneratingQuestions(true)
+  // ── Step 3: Interview complete callback ─────────────────────────────────────
+  async function handleInterviewComplete(result) {
     setTestError('')
     try {
-      const lang   = i18n.language?.startsWith('es') ? 'es' : 'en'
-      const result = await generateTestQuestions(testMeta.type, job.title, lang)
-      const qs     = result.questions ?? []
-      setQuestions(qs)
-      // Persist generated questions in the application so the candidate can resume
-      await updateApplication(app.id, { test_questions: qs, test_answers: {} })
-    } catch (err) {
-      setTestError(t('common.error'))
-      console.error('Question generation error:', err)
-    } finally {
-      setGeneratingQuestions(false)
-    }
-  }
-
-  // ── Step 3: Save answers in real-time ──────────────────────────────────────
-  function handleAnswer(qId, value) {
-    setAnswers(prev => {
-      const next = { ...prev, [qId]: value }
-      // Fire-and-forget: persist partial answers for resume capability
-      updateApplication(app.id, { test_answers: next })
-      return next
-    })
-  }
-
-  const allAnswered = questions.length > 0 && questions.every(q => answers[q.id] != null)
-
-  // ── Step 3: Submit test ────────────────────────────────────────────────────
-  async function handleSubmitTest() {
-    setProcessing(true)
-    setTestError('')
-    try {
-      const result = await evaluateTestAnswers(testMeta.type, t(testMeta.nameKey), questions, answers)
-      await saveTestResult(app.id, testMeta.id, result)
+      await saveTestResult(app.id, 'live_interview_v1', result)
       await submitApplication(app.id)
       setApp(prev => ({ ...prev, current_step: 'submitted', status: 'Pending' }))
     } catch (err) {
       setTestError(t('common.error'))
-      console.error('Test evaluation error:', err)
-    } finally {
-      setProcessing(false)
+      console.error('Interview save error:', err)
     }
   }
 
-  // ── Step 3 skip (no test required) ─────────────────────────────────────────
-  async function handleFinalSubmit() {
-    setProcessing(true)
-    try {
-      await submitApplication(app.id)
-      setApp(prev => ({ ...prev, current_step: 'submitted', status: 'Pending' }))
-    } finally {
-      setProcessing(false)
-    }
+  // ── Advance to interview step ─────────────────────────────────────────────
+  async function handleStartInterview() {
+    await updateApplication(app.id, { current_step: 'test' })
+    setApp(prev => ({ ...prev, current_step: 'test' }))
   }
 
   // ── Loading ────────────────────────────────────────────────────────────────
@@ -391,8 +324,8 @@ export default function ApplyFlow() {
                   {t('candidate.apply.changeResume')}
                 </Button>
                 {fitResult.passed && (
-                  <Button className="flex-1" onClick={handleStartTest} loading={processing || generatingQuestions}>
-                    {testMeta ? `${testMeta.icon} ${t('candidate.apply.startTest')}` : t('candidate.apply.continue')}
+                  <Button className="flex-1" onClick={handleStartInterview} loading={processing}>
+                    🎥 {t('candidate.interview.start')}
                   </Button>
                 )}
               </div>
@@ -401,131 +334,16 @@ export default function ApplyFlow() {
         </>
       )}
 
-      {/* ─── Step 3: Test ─────────────────────────────────────────────────── */}
+      {/* ─── Step 3: Live Interview ────────────────────────────────────────── */}
       {currentStep === 'test' && (
         <div className="space-y-4">
-          {/* Test intro header */}
-          {testMeta && (
-            <Card className="p-4 flex items-center gap-4 border-l-4 border-brand-500">
-              <span className="text-3xl">{testMeta.icon}</span>
-              <div>
-                <h2 className="font-semibold text-gray-900 dark:text-white">{t(testMeta.nameKey)}</h2>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  ⏱ ~{testMeta.duration_minutes} min · {questions.length} {t('company.tests.questions')}
-                </p>
-              </div>
-            </Card>
-          )}
-
-          {/* Loading / generating */}
-          {generatingQuestions && (
-            <Card className="p-8 text-center">
-              <Spinner size="lg" />
-              <p className="text-sm text-brand-500 mt-4">{t('candidate.apply.generatingTest')}</p>
-            </Card>
-          )}
-
-          {/* No questions yet and not generating — button to generate */}
-          {!generatingQuestions && questions.length === 0 && (
-            <Card className="p-8 text-center">
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{t('candidate.apply.testReady')}</p>
-              <Button onClick={handleStartTest} loading={generatingQuestions}>
-                {testMeta?.icon} {t('candidate.apply.startTest')}
-              </Button>
-            </Card>
-          )}
-
-          {/* ── Big Five: Likert scale questions ──────────────────────────── */}
-          {questions.length > 0 && testMeta?.type === 'big_five' && (
-            <Card className="p-6 space-y-6">
-              {questions.map((q, idx) => (
-                <div key={q.id}>
-                  <div className="flex gap-2 mb-3">
-                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-brand-100 dark:bg-brand-900/40 text-brand-600 dark:text-brand-300 text-xs font-bold shrink-0">
-                      {idx + 1}
-                    </span>
-                    <p className="text-sm text-gray-900 dark:text-white font-medium">{q.text}</p>
-                  </div>
-
-                  <div className="flex items-center justify-between gap-1 px-2">
-                    <span className="text-xs text-gray-400 shrink-0 w-20 text-left">{t('tests.likert.stronglyDisagree')}</span>
-                    <div className="flex gap-2">
-                      {LIKERT_VALUES.map(val => (
-                        <button key={val} type="button" onClick={() => handleAnswer(q.id, val)}
-                          className={`w-10 h-10 rounded-full border-2 text-sm font-bold transition-all ${
-                            answers[q.id] === val
-                              ? 'bg-brand-500 border-brand-500 text-white scale-110 shadow-md'
-                              : 'border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-brand-400 hover:text-brand-500'
-                          }`}>
-                          {val}
-                        </button>
-                      ))}
-                    </div>
-                    <span className="text-xs text-gray-400 shrink-0 w-20 text-right">{t('tests.likert.stronglyAgree')}</span>
-                  </div>
-
-                  {idx < questions.length - 1 && (
-                    <div className="border-t border-gray-100 dark:border-gray-800 mt-5" />
-                  )}
-                </div>
-              ))}
-            </Card>
-          )}
-
-          {/* ── Emotional Intelligence: Scenario cards ────────────────────── */}
-          {questions.length > 0 && testMeta?.type === 'emotional_intelligence' && (
-            <div className="space-y-4">
-              {questions.map((q, idx) => (
-                <Card key={q.id} className="p-6">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-300 text-xs font-bold shrink-0">
-                      {idx + 1}
-                    </span>
-                    <span className="text-xs font-medium text-purple-500 dark:text-purple-400 uppercase tracking-wide">
-                      {t(`tests.dimensions.${q.dimension}`)}
-                    </span>
-                  </div>
-
-                  <p className="text-sm text-gray-700 dark:text-gray-300 mb-2 leading-relaxed">{q.situation}</p>
-                  <p className="text-sm font-medium text-gray-900 dark:text-white mb-3">{q.question}</p>
-
-                  <div className="space-y-2">
-                    {q.options.map(opt => (
-                      <button key={opt.key} type="button" onClick={() => handleAnswer(q.id, opt.key)}
-                        className={`w-full text-left p-3 rounded-lg border-2 transition-all text-sm ${
-                          answers[q.id] === opt.key
-                            ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300'
-                            : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-purple-300'
-                        }`}>
-                        <span className="font-bold mr-2">{opt.key}.</span> {opt.text}
-                      </button>
-                    ))}
-                  </div>
-                </Card>
-              ))}
-            </div>
-          )}
-
-          {/* Submit test */}
-          {questions.length > 0 && (
-            <div className="space-y-2">
-              {/* Progress indicator */}
-              <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-                <span>
-                  {Object.keys(answers).length}/{questions.length} {t('candidate.apply.answered')}
-                </span>
-                {!allAnswered && <span className="text-orange-500">{t('candidate.apply.answerAll')}</span>}
-              </div>
-              <ProgressBar value={(Object.keys(answers).length / questions.length) * 100} />
-
-              {testError && <p className="text-sm text-red-500 text-center">{testError}</p>}
-
-              <Button className="w-full" onClick={handleSubmitTest}
-                loading={processing} disabled={!allAnswered}>
-                {t('candidate.apply.submitTest')}
-              </Button>
-            </div>
-          )}
+          <LiveInterview
+            job={job}
+            resumeData={selectedResume?.extracted_data || {}}
+            fitScore={fitResult?.score || 0}
+            onComplete={handleInterviewComplete}
+          />
+          {testError && <p className="text-sm text-red-500 text-center mt-2">{testError}</p>}
         </div>
       )}
 

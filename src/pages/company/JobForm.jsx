@@ -1,7 +1,6 @@
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { createJob, updateJob } from '../../services/jobs'
-import { TEST_CATALOG } from '../../services/testCatalog'
 import Button from '../../components/ui/Button'
 import Input from '../../components/ui/Input'
 import Select from '../../components/ui/Select'
@@ -13,11 +12,6 @@ export default function JobForm({ job, companyId, onSuccess }) {
       ? { ...job, application_deadline: job.application_deadline?.toDate?.()?.toISOString?.().split('T')[0] }
       : {},
   })
-
-  const testOptions = [
-    { value: '', label: `— ${t('company.jobForm.noTest')} —` },
-    ...TEST_CATALOG.map(test => ({ value: test.id, label: `${test.icon} ${t(test.nameKey)}` })),
-  ]
 
   const modalityOpts = [
     { value: 'Remote',  label: t('company.jobForm.remote') },
@@ -44,32 +38,25 @@ export default function JobForm({ job, companyId, onSuccess }) {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="grid sm:grid-cols-2 gap-4">
-        <div className="sm:col-span-2">
-          <Input label={t('company.jobForm.titleField')} error={errors.title?.message}
-            {...register('title', { required: true })} />
-        </div>
-        <div className="sm:col-span-2">
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('company.jobForm.description')}</label>
-          <textarea rows={4} className="mt-1 w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
-            {...register('description')} />
-        </div>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+      <Input label={t('company.jobForm.titleField')} error={errors.title?.message}
+        {...register('title', { required: true })} />
+      <div>
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('company.jobForm.description')}</label>
+        <textarea rows={2} className="mt-1 w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
+          {...register('description')} />
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         <Select label={t('company.jobForm.modality')} options={modalityOpts} {...register('work_modality')} />
         {job && <Select label={t('company.jobs.status')} options={statusOpts} {...register('status')} />}
+        <Input label={t('company.jobForm.country')} {...register('country')} />
         <Input label={t('company.jobForm.minSalary')} type="number" {...register('min_salary')} />
         <Input label={t('company.jobForm.maxSalary')} type="number" {...register('max_salary')} />
         <Input label={t('company.jobForm.experience')} type="number" {...register('years_experience_required')} />
         <Input label={t('company.jobForm.maxApplicants')} type="number" {...register('max_applicants')} />
-        <Input label={t('company.jobForm.country')} {...register('country')} />
         <Input label={t('company.jobForm.deadline')} type="date" {...register('application_deadline')} />
-        <div className="sm:col-span-2">
-          <Input label={t('company.jobForm.benefits')} placeholder="Salud, Vacaciones..." {...register('benefits')} />
-        </div>
-        <div className="sm:col-span-2">
-          <Select label={t('company.jobForm.requiredTest')} options={testOptions} {...register('required_test_id')} />
-        </div>
       </div>
+      <Input label={t('company.jobForm.benefits')} placeholder="Salud, Vacaciones..." {...register('benefits')} />
       <Button type="submit" loading={isSubmitting} className="w-full">{t('company.jobForm.save')}</Button>
     </form>
   )

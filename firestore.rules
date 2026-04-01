@@ -53,12 +53,15 @@ service cloud.firestore {
 
     // ── candidates ───────────────────────────────────────────────────────────
     match /candidates/{userId} {
-      allow read, write: if isOwner(userId);
+      allow read:  if isOwner(userId) || isAnyCompanyUser();
+      allow write: if isOwner(userId);
     }
 
     // ── candidate_resumes ────────────────────────────────────────────────────
     match /candidate_resumes/{resumeId} {
-      allow read, write: if isAuth() &&
+      allow read: if isAuth() &&
+        (resource == null || resource.data.candidate_id == request.auth.uid || isAnyCompanyUser());
+      allow write: if isAuth() &&
         (resource == null || resource.data.candidate_id == request.auth.uid);
     }
 

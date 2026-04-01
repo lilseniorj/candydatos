@@ -10,6 +10,7 @@ import logo from '/logo.png'
 
 const navItems = (t) => [
   { to: '/candidate/profile',      label: t('candidate.profile.title'),      icon: '👤' },
+  { to: '/candidate/resumes',      label: t('candidate.resume.title'),       icon: '📑' },
   { to: '/candidate/jobs',         label: t('candidate.jobs.title'),          icon: '🔍' },
   { to: '/candidate/applications', label: t('candidate.applications.title'),  icon: '📄' },
 ]
@@ -46,7 +47,7 @@ export default function CandidateLayout() {
           <p className="text-xs text-orange-500 mt-1">{t('candidate.profile.completeToApply')}</p>
         )}
       </div>
-      <div className="flex-1 p-3 space-y-1 overflow-y-auto">
+      <div className="flex-1 p-3 space-y-1 overflow-y-auto scrollbar-thin">
         {navItems(t).map(item => (
           <NavLink key={item.to} to={item.to} className={linkCls} onClick={() => setMobileOpen(false)}>
             <span>{item.icon}</span>{item.label}
@@ -55,9 +56,13 @@ export default function CandidateLayout() {
       </div>
       <div className="p-3 border-t border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-2 px-2 py-2 mb-2">
-          <div className="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center text-white text-xs font-bold">
-            {userDoc?.first_name?.[0]?.toUpperCase() || 'C'}
-          </div>
+          {userDoc?.avatar_url ? (
+            <img src={userDoc.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover shrink-0 border border-gray-200 dark:border-gray-700" />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
+              {userDoc?.first_name?.[0]?.toUpperCase() || 'C'}
+            </div>
+          )}
           <div className="min-w-0">
             <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
               {[userDoc?.first_name, userDoc?.last_name].filter(Boolean).join(' ') || userDoc?.email}
@@ -108,7 +113,7 @@ export default function CandidateLayout() {
             <ThemeToggle />
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+        <main className="flex-1 overflow-y-auto scrollbar-thin p-4 md:p-6">
           <Outlet />
         </main>
       </div>

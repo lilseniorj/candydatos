@@ -9,10 +9,10 @@ import LanguageToggle from '../components/layout/LanguageToggle'
 import logo from '/logo.png'
 
 const navItems = (t) => [
-  { to: '/company/dashboard', label: t('company.dashboard.title'), icon: '▦' },
-  { to: '/company/jobs',      label: t('company.jobs.title'),      icon: '📋' },
-  { to: '/company/tests',     label: t('company.tests.title'),     icon: '🧪' },
-  { to: '/company/analytics', label: t('company.analytics.title'), icon: '📊' },
+  { to: '/company/dashboard', label: t('company.dashboard.title'),  icon: '▦' },
+  { to: '/company/jobs',      label: t('company.jobs.title'),       icon: '📋' },
+  { to: '/company/analytics', label: t('company.analytics.title'),  icon: '📊' },
+  { to: '/company/settings',  label: t('company.settings.title'),   icon: '⚙️' },
 ]
 
 export default function CompanyLayout() {
@@ -43,7 +43,7 @@ export default function CompanyLayout() {
         </div>
         {company && <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{company.commercial_name}</p>}
       </div>
-      <div className="flex-1 p-3 space-y-1 overflow-y-auto">
+      <div className="flex-1 p-3 space-y-1 overflow-y-auto scrollbar-thin">
         {navItems(t).map(item => (
           <NavLink key={item.to} to={item.to} className={linkCls} onClick={() => setMobileOpen(false)}>
             <span>{item.icon}</span>{item.label}
@@ -52,11 +52,15 @@ export default function CompanyLayout() {
       </div>
       <div className="p-3 border-t border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-2 px-2 py-2 mb-2">
-          <div className="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center text-white text-xs font-bold">
-            {userDoc?.full_name?.[0]?.toUpperCase() || 'U'}
-          </div>
+          {company?.logo_url ? (
+            <img src={company.logo_url} alt={company.commercial_name} className="w-8 h-8 rounded-full object-cover shrink-0 border border-gray-200 dark:border-gray-700" />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
+              {company?.commercial_name?.[0]?.toUpperCase() || 'U'}
+            </div>
+          )}
           <div className="min-w-0">
-            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{userDoc?.full_name}</p>
+            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{company?.commercial_name || userDoc?.full_name}</p>
             <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{userDoc?.role}</p>
           </div>
         </div>
@@ -102,7 +106,7 @@ export default function CompanyLayout() {
             <ThemeToggle />
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+        <main className="flex-1 overflow-y-auto scrollbar-thin p-4 md:p-6">
           <Outlet />
         </main>
       </div>

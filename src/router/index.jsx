@@ -27,9 +27,14 @@ import JobList          from '../pages/company/JobList'
 import ApplicantList    from '../pages/company/ApplicantList'
 import Analytics        from '../pages/company/Analytics'
 import TestManager      from '../pages/company/TestManager'
+import CompanySettings  from '../pages/company/CompanySettings'
+import JobEdit          from '../pages/company/JobEdit'
+import ApplicantDetail  from '../pages/company/ApplicantDetail'
 
 // Candidate pages
 import CandidateProfile from '../pages/candidate/CandidateProfile'
+import ResumeList       from '../pages/candidate/ResumeList'
+import ResumeDetail     from '../pages/candidate/ResumeDetail'
 import JobBoard         from '../pages/candidate/JobBoard'
 import ApplyFlow        from '../pages/candidate/ApplyFlow'
 import MyApplications   from '../pages/candidate/MyApplications'
@@ -67,9 +72,12 @@ const router = createBrowserRouter([
       children: [
         { path: '/company/dashboard',               element: <CompanyDashboard /> },
         { path: '/company/jobs',                    element: <JobList /> },
-        { path: '/company/jobs/:jobId/applicants',  element: <ApplicantList /> },
+        { path: '/company/jobs/:jobId/edit',         element: <JobEdit /> },
+        { path: '/company/jobs/:jobId/applicants',              element: <ApplicantList /> },
+        { path: '/company/jobs/:jobId/applicants/:appId',      element: <ApplicantDetail /> },
         { path: '/company/tests',                   element: <TestManager /> },
         { path: '/company/analytics',               element: <Analytics /> },
+        { path: '/company/settings',               element: <CompanySettings /> },
       ],
     }],
   },
@@ -93,6 +101,8 @@ const router = createBrowserRouter([
       element: <CandidateLayout />,
       children: [
         { path: '/candidate/profile',            element: <CandidateProfile /> },
+        { path: '/candidate/resumes',            element: <ResumeList /> },
+        { path: '/candidate/resumes/:resumeId',  element: <ResumeDetail /> },
         { path: '/candidate/jobs',               element: <JobBoard /> },
         { path: '/candidate/apply/:jobId',       element: <ApplyFlow /> },
         { path: '/candidate/applications',       element: <MyApplications /> },

@@ -114,7 +114,10 @@
       "status": "Status",
       "applicants": "Applicants",
       "deadline": "Deadline",
-      "empty": "No job offers yet. Create the first one!"
+      "empty": "No job offers yet. Create the first one!",
+      "search": "Search by title or country...",
+      "noResults": "No jobs match your search",
+      "editJob": "Edit job offer"
     },
     "jobForm": {
       "titleField": "Job title",
@@ -147,7 +150,37 @@
       "reject": "Reject",
       "score": "Score",
       "appliedAt": "Applied",
-      "empty": "No applicants yet"
+      "empty": "No applicants yet",
+      "search": "Search applicant by name..."
+    },
+    "pipeline": {
+      "title": "Selection pipeline",
+      "received": "Received",
+      "reviewing": "Reviewing",
+      "interview": "Interview",
+      "technical": "Technical test",
+      "offer": "Offer",
+      "hired": "Hired",
+      "rejected": "Rejected",
+      "advanceTo": "Advance to",
+      "reject": "Reject candidate"
+    },
+    "applicantDetail": {
+      "personalInfo": "Personal information",
+      "city": "City",
+      "country": "Country",
+      "phone": "Phone",
+      "idType": "ID type",
+      "idNumber": "ID number",
+      "skills": "Skills",
+      "experience": "Work experience",
+      "education": "Education",
+      "documents": "CV & documents",
+      "summary": "Professional summary",
+      "testResults": "Test results",
+      "history": "Stage history",
+      "notes": "Internal team notes",
+      "notesPlaceholder": "Write internal notes about this candidate..."
     },
     "analytics": {
       "title": "Analytics",
@@ -165,6 +198,16 @@
       "sent": "Invitation sent!",
       "admin": "Admin",
       "recruiter": "Recruiter"
+    },
+    "settings": {
+      "title": "Settings",
+      "logo": "Company logo",
+      "logoHint": "Upload your company logo in PNG, JPG or SVG (max 2MB). It will be shown on job listings.",
+      "uploadLogo": "Upload logo",
+      "removeLogo": "Remove logo",
+      "logoTooLarge": "Image must be smaller than 2MB.",
+      "companyInfo": "Company information",
+      "save": "Save changes"
     },
     "tests": {
       "title": "Tests",
@@ -192,7 +235,9 @@
       "country": "Country",
       "idType": "ID type",
       "idNumber": "ID number",
-      "save": "Save profile"
+      "save": "Save profile",
+      "editProfile": "Edit profile",
+      "complete": "Profile complete"
     },
     "resume": {
       "title": "My Resumes",
@@ -203,7 +248,31 @@
       "name": "Resume name",
       "delete": "Delete",
       "empty": "No resumes yet. Upload one to get started.",
-      "noAiData": "AI analysis not available for this document."
+      "emptyDesc": "Upload your first resume as PDF so the AI can analyze it and give you recommendations.",
+      "noAiData": "AI analysis not available for this document.",
+      "documents": "documents",
+      "backToList": "Back to my resumes",
+      "notFound": "Resume not found.",
+      "uploadedOn": "Uploaded on",
+      "viewDocument": "View document",
+      "overallScore": "Overall Resume Score",
+      "scoreDescription": "This score is calculated based on the skills, experience, education, and structure detected in your document.",
+      "catSkills": "Skills",
+      "catExperience": "Experience",
+      "catEducation": "Education",
+      "catStructure": "Structure",
+      "personalInfo": "Personal information",
+      "fullName": "Full name",
+      "summary": "Professional summary",
+      "noData": "No information detected in this category.",
+      "tipMoreSkills": "Add at least 5 relevant technical skills to improve your visibility.",
+      "tipFramework": "Include specific frameworks (React, Angular, Vue) to stand out in searches.",
+      "tipAddExperience": "Add your work experience, including internships or personal projects.",
+      "tipAddYears": "Specify the duration of each experience so recruiters can assess your track record.",
+      "tipAddEducation": "Include your academic background and certifications.",
+      "tipAddSummary": "Add a 2-3 line professional summary at the top of your resume.",
+      "tipAddPhone": "Include your phone number so you can be contacted easily.",
+      "tipAddEmail": "Make sure to include a professional email address."
     },
     "jobs": {
       "title": "Job Openings",
@@ -219,7 +288,19 @@
       "deadline": "Deadline",
       "experience": "Experience required",
       "salary_range": "Salary",
-      "empty": "No open positions match your search"
+      "empty": "No open positions match your search",
+      "results": "results",
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "daysAgo": "{{count}} days ago",
+      "weeksAgo": "{{count}} weeks ago",
+      "monthsAgo": "{{count}} months ago",
+      "yearsExp": "years experience",
+      "aboutJob": "About the job",
+      "benefits": "Benefits",
+      "aboutCompany": "About the company",
+      "moreFrom": "More jobs from",
+      "selectJob": "Select a job to see the details"
     },
     "apply": {
       "step1": "Select resume",
@@ -245,8 +326,25 @@
       "submitTest": "Submit answers",
       "successTitle": "Application submitted!",
       "successDesc": "We will notify you of any updates.",
-      "backToJobs": "Back to jobs",
-      "changeResume": "Change resume"
+      "interviewStep": "AI Interview"
+    },
+    "interview": {
+      "title": "AI Interview",
+      "description": "An AI interviewer will ask you psychometric, emotional reasoning, and experience questions. The interview lasts 2 minutes.",
+      "start": "Start interview",
+      "micRequired": "Microphone required",
+      "camRequired": "Camera required",
+      "requestingAccess": "Requesting camera and microphone access...",
+      "connecting": "Connecting to AI interviewer...",
+      "aiSpeaking": "AI speaking...",
+      "yourTurn": "Your turn",
+      "recording": "Recording",
+      "ending": "Ending interview...",
+      "processing": "Processing results with AI...",
+      "permissionError": "Could not access camera or microphone. Check your browser permissions.",
+      "genericError": "An error occurred during the interview.",
+      "evalError": "Could not process interview results.",
+      "retry": "Try again"
     },
     "applications": {
       "title": "My Applications",
@@ -259,7 +357,8 @@
       "status_Hired": "Hired",
       "feedback": "Recruiter feedback",
       "resume": "Resume",
-      "score": "Score"
+      "score": "Score",
+      "backToList": "Back to my applications"
     }
   },
   "tests": {

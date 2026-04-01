@@ -114,7 +114,10 @@
       "status": "Estado",
       "applicants": "Candidatos",
       "deadline": "Fecha límite",
-      "empty": "Aún no hay ofertas. ¡Crea la primera!"
+      "empty": "Aún no hay ofertas. ¡Crea la primera!",
+      "search": "Buscar oferta por cargo o país...",
+      "noResults": "No se encontraron ofertas con esa búsqueda",
+      "editJob": "Editar oferta laboral"
     },
     "jobForm": {
       "titleField": "Título del cargo",
@@ -147,7 +150,37 @@
       "reject": "Rechazar",
       "score": "Puntaje",
       "appliedAt": "Aplicó",
-      "empty": "Aún no hay candidatos"
+      "empty": "Aún no hay candidatos",
+      "search": "Buscar candidato por nombre..."
+    },
+    "pipeline": {
+      "title": "Pipeline de selección",
+      "received": "Recibido",
+      "reviewing": "En revisión",
+      "interview": "Entrevista",
+      "technical": "Prueba técnica",
+      "offer": "Oferta",
+      "hired": "Contratado",
+      "rejected": "Rechazado",
+      "advanceTo": "Avanzar a",
+      "reject": "Rechazar candidato"
+    },
+    "applicantDetail": {
+      "personalInfo": "Información personal",
+      "city": "Ciudad",
+      "country": "País",
+      "phone": "Teléfono",
+      "idType": "Tipo de documento",
+      "idNumber": "Número de documento",
+      "skills": "Habilidades",
+      "experience": "Experiencia laboral",
+      "education": "Educación",
+      "documents": "CV y documentos",
+      "summary": "Resumen profesional",
+      "testResults": "Resultados del test",
+      "history": "Historial de etapas",
+      "notes": "Notas internas del equipo",
+      "notesPlaceholder": "Escribe notas internas sobre este candidato..."
     },
     "analytics": {
       "title": "Analytics",
@@ -165,6 +198,16 @@
       "sent": "¡Invitación enviada!",
       "admin": "Administrador",
       "recruiter": "Reclutador"
+    },
+    "settings": {
+      "title": "Configuración",
+      "logo": "Logo de la empresa",
+      "logoHint": "Sube el logo de tu empresa en PNG, JPG o SVG (máx. 2MB). Se mostrará en las ofertas laborales.",
+      "uploadLogo": "Subir logo",
+      "removeLogo": "Eliminar logo",
+      "logoTooLarge": "La imagen debe ser menor a 2MB.",
+      "companyInfo": "Información de la empresa",
+      "save": "Guardar cambios"
     },
     "tests": {
       "title": "Tests",
@@ -192,7 +235,9 @@
       "country": "País",
       "idType": "Tipo de documento",
       "idNumber": "Número de documento",
-      "save": "Guardar perfil"
+      "save": "Guardar perfil",
+      "editProfile": "Editar perfil",
+      "complete": "Perfil completo"
     },
     "resume": {
       "title": "Mis Hojas de Vida",
@@ -203,7 +248,31 @@
       "name": "Nombre de la hoja de vida",
       "delete": "Eliminar",
       "empty": "Aún no tienes hojas de vida. Sube una para comenzar.",
-      "noAiData": "Análisis de IA no disponible para este documento."
+      "emptyDesc": "Sube tu primera hoja de vida en PDF para que la IA la analice y te dé recomendaciones.",
+      "noAiData": "Análisis de IA no disponible para este documento.",
+      "documents": "documentos",
+      "backToList": "Volver a mis hojas de vida",
+      "notFound": "Hoja de vida no encontrada.",
+      "uploadedOn": "Subida el",
+      "viewDocument": "Ver documento",
+      "overallScore": "Puntaje general de tu HV",
+      "scoreDescription": "Este puntaje se calcula en base a las habilidades, experiencia, educación y estructura detectadas en tu documento.",
+      "catSkills": "Habilidades",
+      "catExperience": "Experiencia",
+      "catEducation": "Educación",
+      "catStructure": "Estructura",
+      "personalInfo": "Información personal",
+      "fullName": "Nombre completo",
+      "summary": "Resumen profesional",
+      "noData": "No se detectó información en esta categoría.",
+      "tipMoreSkills": "Agrega al menos 5 habilidades técnicas relevantes para mejorar tu visibilidad.",
+      "tipFramework": "Incluye frameworks específicos (React, Angular, Vue) para destacar en búsquedas.",
+      "tipAddExperience": "Agrega tu experiencia laboral, incluso pasantías o proyectos personales.",
+      "tipAddYears": "Especifica la duración de cada experiencia para que los reclutadores evalúen tu trayectoria.",
+      "tipAddEducation": "Incluye tu formación académica y certificaciones.",
+      "tipAddSummary": "Agrega un resumen profesional de 2-3 líneas al inicio de tu HV.",
+      "tipAddPhone": "Incluye tu número de teléfono para que te contacten fácilmente.",
+      "tipAddEmail": "Asegúrate de incluir un correo electrónico profesional."
     },
     "jobs": {
       "title": "Ofertas Laborales",
@@ -219,7 +288,19 @@
       "deadline": "Fecha límite",
       "experience": "Experiencia requerida",
       "salary_range": "Salario",
-      "empty": "No hay vacantes abiertas que coincidan con tu búsqueda"
+      "empty": "No hay vacantes abiertas que coincidan con tu búsqueda",
+      "results": "resultados",
+      "today": "Hoy",
+      "yesterday": "Ayer",
+      "daysAgo": "Hace {{count}} días",
+      "weeksAgo": "Hace {{count}} semanas",
+      "monthsAgo": "Hace {{count}} meses",
+      "yearsExp": "años de experiencia",
+      "aboutJob": "Acerca del empleo",
+      "benefits": "Beneficios",
+      "aboutCompany": "Acerca de la empresa",
+      "moreFrom": "Más ofertas de",
+      "selectJob": "Selecciona una oferta para ver los detalles"
     },
     "apply": {
       "step1": "Seleccionar HV",
@@ -245,8 +326,25 @@
       "submitTest": "Enviar respuestas",
       "successTitle": "¡Aplicación enviada!",
       "successDesc": "Te notificaremos sobre cualquier novedad.",
-      "backToJobs": "Volver a las ofertas",
-      "changeResume": "Cambiar hoja de vida"
+      "interviewStep": "Entrevista IA"
+    },
+    "interview": {
+      "title": "Entrevista con IA",
+      "description": "Un entrevistador de IA te hará preguntas psicotécnicas, de razonamiento emocional y sobre tu experiencia. La entrevista dura 2 minutos.",
+      "start": "Iniciar entrevista",
+      "micRequired": "Micrófono requerido",
+      "camRequired": "Cámara requerida",
+      "requestingAccess": "Solicitando acceso a cámara y micrófono...",
+      "connecting": "Conectando con el entrevistador IA...",
+      "aiSpeaking": "IA hablando...",
+      "yourTurn": "Tu turno",
+      "recording": "Grabando",
+      "ending": "Finalizando entrevista...",
+      "processing": "Procesando resultados con IA...",
+      "permissionError": "No se pudo acceder a la cámara o micrófono. Verifica los permisos del navegador.",
+      "genericError": "Ocurrió un error durante la entrevista.",
+      "evalError": "No se pudieron procesar los resultados de la entrevista.",
+      "retry": "Intentar de nuevo"
     },
     "applications": {
       "title": "Mis Aplicaciones",
@@ -259,7 +357,8 @@
       "status_Hired": "Contratado/a",
       "feedback": "Comentario del reclutador",
       "resume": "Hoja de vida",
-      "score": "Puntaje"
+      "score": "Puntaje",
+      "backToList": "Volver a mis aplicaciones"
     }
   },
   "tests": {
