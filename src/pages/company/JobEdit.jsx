@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { useCompany } from '../../context/CompanyContext'
+import { useToast } from '../../context/ToastContext'
 import { getJob, updateJob, createJob } from '../../services/jobs'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
@@ -33,11 +34,14 @@ export default function JobEdit() {
   const { jobId } = useParams()
   const navigate = useNavigate()
   const { company } = useCompany()
+  const toast = useToast()
   const isNew = !jobId
   const [loading, setLoading] = useState(!isNew)
-  const [saveMsg, setSaveMsg] = useState('')
 
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm()
+  const { register, handleSubmit, reset, watch, formState: { errors, isSubmitting } } = useForm({
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
+  })
 
   useEffect(() => {
     if (isNew) return
@@ -93,12 +97,12 @@ export default function JobEdit() {
     }
     if (isNew) {
       await createJob(company.id, payload)
+      toast.success(t('toast.jobCreated'))
       navigate('/company/jobs')
     } else {
       payload.status = data.status
       await updateJob(jobId, payload)
-      setSaveMsg('✓')
-      setTimeout(() => setSaveMsg(''), 2000)
+      toast.success(t('toast.jobSaved'))
     }
   }
 
@@ -116,7 +120,7 @@ export default function JobEdit() {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <Card className="p-5 space-y-4">
           <Input label={t('company.jobForm.titleField')} error={errors.title?.message}
-            {...register('title', { required: true })} />
+            {...register('title', { required: t('validation.required'), minLength: { value: 3, message: t('validation.minLength', { min: 3 }) } })} />
           <div>
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('company.jobForm.description')}</label>
             <textarea rows={4} className="mt-1 w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
@@ -128,7 +132,7 @@ export default function JobEdit() {
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             <Select label={t('company.jobForm.modality')} options={modalityOpts} {...register('work_modality')} />
             {!isNew && <Select label={t('company.jobs.status')} options={statusOpts} {...register('status')} />}
-            <Input label={t('company.jobForm.country')} {...register('country')} />
+            <Input label={t('company.jobForm.country')} error={errors.country?.message} {...register('country', { required: t('validation.required') })} />
             <Input label={t('company.jobForm.minSalary')} type="number" {...register('min_salary')} />
             <Input label={t('company.jobForm.maxSalary')} type="number" {...register('max_salary')} />
             <Input label={t('company.jobForm.experience')} type="number" {...register('years_experience_required')} />
@@ -155,7 +159,7 @@ export default function JobEdit() {
         </Card>
 
         <Button type="submit" loading={isSubmitting} className="w-full">
-          {saveMsg || t('company.jobForm.save')}
+          {t('company.jobForm.save')}
         </Button>
       </form>
     </div>

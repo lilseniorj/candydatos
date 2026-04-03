@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { storage } from '../../firebase/config'
 import { useCompany } from '../../context/CompanyContext'
+import { useToast } from '../../context/ToastContext'
 import { updateCompany } from '../../services/companies'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
@@ -15,12 +16,11 @@ export default function CompanySettings() {
   const { company } = useCompany()
   const fileRef = useRef()
 
+  const toast = useToast()
   const [logoPreview, setLogoPreview] = useState(company?.logo_url || '')
   const [uploading, setUploading]     = useState(false)
-  const [saveMsg, setSaveMsg]         = useState('')
-  const [saveError, setSaveError]     = useState('')
 
-  const { register, handleSubmit, formState: { isSubmitting } } = useForm({
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
     defaultValues: {
       commercial_name: company?.commercial_name || '',
       industry_sector: company?.industry_sector || '',
@@ -37,12 +37,11 @@ export default function CompanySettings() {
 
     if (!file.type.startsWith('image/')) return
     if (file.size > 2 * 1024 * 1024) {
-      setSaveError(t('company.settings.logoTooLarge'))
+      toast.warning(t('company.settings.logoTooLarge'))
       return
     }
 
     setUploading(true)
-    setSaveError('')
     try {
       const ext = file.name.split('.').pop()
       const storageRef = ref(storage, `logos/${company.id}/logo.${ext}`)
@@ -51,25 +50,22 @@ export default function CompanySettings() {
 
       await updateCompany(company.id, { logo_url: url })
       setLogoPreview(url)
-      // company auto-refreshes via onSnapshot
+      toast.success(t('toast.logoUploaded'))
     } catch (err) {
       console.error('Logo upload error:', err)
-      setSaveError(t('common.error'))
+      toast.error(t('common.error'))
     } finally {
       setUploading(false)
     }
   }
 
   async function onSubmit(data) {
-    setSaveError('')
     try {
       await updateCompany(company.id, data)
-      // company auto-refreshes via onSnapshot
-      setSaveMsg('✓')
-      setTimeout(() => setSaveMsg(''), 2500)
+      toast.success(t('toast.settingsSaved'))
     } catch (err) {
       console.error('Settings save error:', err)
-      setSaveError(t('common.error'))
+      toast.error(t('common.error'))
     }
   }
 
@@ -129,7 +125,8 @@ export default function CompanySettings() {
       <Card className="p-6">
         <h2 className="font-semibold text-gray-900 dark:text-white mb-4">{t('company.settings.companyInfo')}</h2>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <Input label={t('setup.companyName')} {...register('commercial_name')} />
+          <Input label={t('setup.companyName')} error={errors.commercial_name?.message}
+            {...register('commercial_name', { required: t('validation.required'), minLength: { value: 2, message: t('validation.minLength', { min: 2 }) } })} />
           <Input label={t('setup.sector')} {...register('industry_sector')} />
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('setup.bio')}</label>
@@ -143,9 +140,8 @@ export default function CompanySettings() {
           </div>
           <Input label={t('setup.website')} type="url" placeholder="https://" {...register('website_url')} />
 
-          {saveError && <p className="text-sm text-red-500">{saveError}</p>}
           <Button type="submit" loading={isSubmitting} className="w-full">
-            {saveMsg || t('company.settings.save')}
+            {t('company.settings.save')}
           </Button>
         </form>
       </Card>

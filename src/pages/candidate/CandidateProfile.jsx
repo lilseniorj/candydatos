@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { storage } from '../../firebase/config'
 import { useAuth } from '../../context/AuthContext'
+import { useToast } from '../../context/ToastContext'
 import { updateCandidateProfile } from '../../services/candidates'
 import { getResumesByCandidate } from '../../services/resumes'
 import Card from '../../components/ui/Card'
@@ -23,6 +24,7 @@ const ID_TYPES = [
 export default function CandidateProfile() {
   const { t } = useTranslation()
   const { firebaseUser, userDoc, refreshUserDoc } = useAuth()
+  const toast = useToast()
   const fileRef = useRef()
 
   const [resumeCount, setResumeCount] = useState(0)
@@ -51,8 +53,10 @@ export default function CandidateProfile() {
       await updateCandidateProfile(firebaseUser.uid, { ...userDoc, avatar_url: url }, resumeCount)
       setAvatarUrl(url)
       await refreshUserDoc()
+      toast.success(t('toast.avatarUploaded'))
     } catch (err) {
       console.error('Avatar upload error:', err)
+      toast.error(t('common.error'))
     } finally {
       setUploading(false)
     }
@@ -180,11 +184,12 @@ export default function CandidateProfile() {
 
 // ─── Edit modal component ───────────────────────────────────────────────────
 function EditProfileModal({ open, onClose, userDoc, firebaseUser, resumeCount, refreshUserDoc, t }) {
-  const [saveMsg, setSaveMsg]     = useState('')
-  const [saveError, setSaveError] = useState('')
+  const toast = useToast()
 
-  const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm({
+  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm({
     defaultValues: userDoc || {},
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
   })
 
   useEffect(() => {
@@ -192,38 +197,45 @@ function EditProfileModal({ open, onClose, userDoc, firebaseUser, resumeCount, r
   }, [open, userDoc])
 
   async function onSubmit(data) {
-    setSaveError('')
     try {
       await updateCandidateProfile(firebaseUser.uid, data, resumeCount)
       await refreshUserDoc()
-      setSaveMsg('✓')
-      setTimeout(() => { setSaveMsg(''); onClose() }, 800)
+      toast.success(t('toast.profileSaved'))
+      onClose()
     } catch (err) {
-      setSaveError(t('common.error'))
+      toast.error(t('common.error'))
       console.error('Profile save error:', err)
     }
   }
+
+  const req = (msg) => ({ required: msg || t('validation.required') })
+  const minLen = (min) => ({ minLength: { value: min, message: t('validation.minLength', { min }) } })
 
   return (
     <Modal open={open} onClose={onClose} title={t('candidate.profile.editProfile')} maxWidth="max-w-lg">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
-          <Input label={t('candidate.profile.firstName')} {...register('first_name')} />
-          <Input label={t('candidate.profile.lastName')}  {...register('last_name')} />
-          <Input label={t('candidate.profile.phone')}     type="tel" {...register('phone')} />
-          <Input label={t('candidate.profile.city')}      {...register('city')} />
-          <Input label={t('candidate.profile.country')}   {...register('country')} />
-          <Select label={t('candidate.profile.idType')} options={[
+          <Input label={t('candidate.profile.firstName')} error={errors.first_name?.message}
+            {...register('first_name', { ...req(), ...minLen(2) })} />
+          <Input label={t('candidate.profile.lastName')} error={errors.last_name?.message}
+            {...register('last_name', { ...req(), ...minLen(2) })} />
+          <Input label={t('candidate.profile.phone')} type="tel" error={errors.phone?.message}
+            {...register('phone', req())} />
+          <Input label={t('candidate.profile.city')} error={errors.city?.message}
+            {...register('city', req())} />
+          <Input label={t('candidate.profile.country')} error={errors.country?.message}
+            {...register('country', req())} />
+          <Select label={t('candidate.profile.idType')} error={errors.identification_type?.message} options={[
             { value: '', label: '—' },
             { value: 'CC', label: 'CC' }, { value: 'CE', label: 'CE' }, { value: 'Passport', label: 'Passport' },
-          ]} {...register('identification_type')} />
+          ]} {...register('identification_type', req())} />
           <div className="col-span-2">
-            <Input label={t('candidate.profile.idNumber')} {...register('identification_number')} />
+            <Input label={t('candidate.profile.idNumber')} error={errors.identification_number?.message}
+              {...register('identification_number', { ...req(), ...minLen(5) })} />
           </div>
         </div>
-        {saveError && <p className="text-sm text-red-500">{saveError}</p>}
         <Button type="submit" loading={isSubmitting} className="w-full">
-          {saveMsg || t('candidate.profile.save')}
+          {t('candidate.profile.save')}
         </Button>
       </form>
     </Modal>

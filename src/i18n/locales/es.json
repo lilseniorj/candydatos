@@ -125,7 +125,7 @@
   },
   "company": {
     "dashboard": {
-      "title": "Dashboard",
+      "title": "Panel Principal",
       "totalJobs": "Total de vacantes",
       "activeJobs": "Activas",
       "totalApplicants": "Total de candidatos",
@@ -223,19 +223,19 @@
       "interviewRecording": "Grabación de la entrevista"
     },
     "analytics": {
-      "title": "Analytics",
+      "title": "Estadísticas",
       "funnel": "Embudo de candidatos",
       "bigFive": "Big Five (OCEAN)",
       "bigFiveDesc": "Promedio de rasgos de personalidad de todos los candidatos evaluados.",
       "ei": "Inteligencia Emocional",
       "eiDesc": "Promedio de dimensiones de IE de todos los candidatos evaluados.",
-      "interviewScores": "Scores de Entrevistas IA",
+      "interviewScores": "Puntajes de Entrevistas IA",
       "interviewScoresDesc": "Promedio de puntuación por categoría de todas las entrevistas realizadas con IA.",
       "interviewResults": "Resultados de Entrevistas",
       "totalResults": "resultados",
       "searchCandidate": "Buscar candidato...",
       "allJobs": "Todas las ofertas",
-      "sortScore": "Mayor score",
+      "sortScore": "Mayor puntaje",
       "sortDate": "Más reciente",
       "noResults": "No se encontraron resultados con estos filtros",
       "loadMore": "Cargar más",
@@ -261,7 +261,7 @@
       "save": "Guardar cambios"
     },
     "tests": {
-      "title": "Tests",
+      "title": "Pruebas",
       "catalogDesc": "Estos tests psicométricos están disponibles para todas las empresas. Asócialos a tus ofertas desde el formulario de creación de vacantes.",
       "questions": "preguntas",
       "dimensions": "Dimensiones",
@@ -272,6 +272,51 @@
       "minutes": "min",
       "empty": "Aún no hay tests. Crea el primero.",
       "id": "ID del test"
+    },
+    "skills": {
+      "title": "Análisis de Habilidades",
+      "subtitle": "Análisis de {{count}} candidatos en tu pool de talento",
+      "coverage": "Cobertura de Habilidades",
+      "coveragePct": "Cobertura",
+      "detail": "Detalle por Habilidad",
+      "skill": "Habilidad",
+      "jobsDemanding": "Ofertas",
+      "candidatesHave": "Candidatos",
+      "status": "Estado",
+      "low": "Bajo",
+      "gap": "Brecha",
+      "gapAlert": "Habilidades con Brecha Crítica",
+      "gapDesc": "Estas habilidades las pides pero menos del 30% de tus candidatos las tienen. Considera ajustar requisitos o publicar en comunidades especializadas.",
+      "surplus": "Talento No Aprovechado",
+      "surplusDesc": "Habilidades que tienen tus candidatos pero no requieres en ninguna oferta activa.",
+      "noSkills": "Agrega habilidades requeridas en tus ofertas de trabajo para ver el análisis."
+    },
+    "bulk": {
+      "selected": "seleccionados",
+      "selectAll": "Seleccionar todos",
+      "reject": "Rechazar",
+      "advance": "Avanzar",
+      "assignAll": "Asignar gestor",
+      "rejectTitle": "Rechazar {{count}} candidatos",
+      "rejectDesc": "¿Estás seguro de que deseas rechazar a {{count}} candidatos seleccionados?",
+      "feedbackOptional": "Retroalimentación (opcional)",
+      "feedbackPlaceholder": "Agradecemos tu interés, la posición ha sido cubierta con otro perfil.",
+      "confirmReject": "Confirmar rechazo",
+      "advanceTitle": "Avanzar {{count}} candidatos",
+      "advanceDesc": "Se cambiará el estado de {{count}} candidatos a Reviewed.",
+      "assignTitle": "Asignar gestor a {{count}} candidatos"
+    },
+    "feedbackTemplates": {
+      "profileNotAlignedLabel": "Perfil no alineado",
+      "profileNotAligned": "Agradecemos mucho tu interés en esta posición. Después de revisar tu perfil, hemos decidido avanzar con candidatos cuyo perfil se alinea más con los requisitos actuales del cargo. Te invitamos a aplicar a futuras vacantes.",
+      "positionFilledLabel": "Posición cubierta",
+      "positionFilled": "Gracias por tu interés en esta oportunidad. La posición ha sido cubierta con otro candidato. Te animamos a estar atento a nuevas vacantes que puedan ajustarse a tu perfil.",
+      "insufficientExperienceLabel": "Experiencia insuficiente",
+      "insufficientExperience": "Apreciamos tu interés en el cargo. En esta ocasión buscamos un perfil con mayor experiencia en el área. Te invitamos a seguir desarrollando tus habilidades y aplicar en el futuro.",
+      "missingSkillsLabel": "Habilidades faltantes",
+      "missingSkills": "Gracias por aplicar. Tras evaluar tu perfil, identificamos que algunas habilidades clave requeridas para el cargo no están presentes. Te recomendamos fortalecer estas áreas y volver a postularte.",
+      "keepInTouchLabel": "Seguimos en contacto",
+      "keepInTouch": "Gracias por tu participación en el proceso de selección. Aunque en esta ocasión no avanzaremos con tu candidatura, tu perfil nos parece interesante y lo tendremos en cuenta para futuras oportunidades."
     }
   },
   "candidate": {
@@ -444,6 +489,29 @@
       "score": "Puntaje",
       "backToList": "Volver a mis aplicaciones",
       "delete": "Eliminar aplicación"
+    },
+    "settings": {
+      "title": "Mi Cuenta",
+      "accountInfo": "Información de la cuenta",
+      "email": "Correo electrónico",
+      "name": "Nombre",
+      "authMethod": "Método de autenticación",
+      "exportTitle": "Exportar mis datos",
+      "exportDesc": "Descarga toda tu información (perfil, hojas de vida, aplicaciones) en formato JSON.",
+      "exportButton": "Descargar mis datos",
+      "exportSuccess": "Datos exportados correctamente",
+      "deleteTitle": "Eliminar mi cuenta",
+      "deleteDesc": "Se eliminarán permanentemente tu perfil, hojas de vida, resultados de pruebas y todas tus aplicaciones. Esta acción no se puede deshacer.",
+      "deleteButton": "Eliminar mi cuenta",
+      "deleteConfirmTitle": "¿Eliminar tu cuenta?",
+      "deleteWarning": "Esta acción es permanente e irreversible. Todos tus datos serán eliminados.",
+      "deleteItem1": "Tu perfil y foto serán eliminados",
+      "deleteItem2": "Todas tus hojas de vida y archivos serán borrados",
+      "deleteItem3": "Tus aplicaciones y resultados de pruebas desaparecerán",
+      "deleteTypeConfirm": "Escribe ELIMINAR para confirmar",
+      "deleteConfirmButton": "Eliminar permanentemente",
+      "deleteSuccess": "Cuenta eliminada correctamente",
+      "reloginRequired": "Por seguridad, necesitas volver a iniciar sesión antes de eliminar tu cuenta."
     }
   },
   "tests": {
@@ -500,6 +568,40 @@
     "no": "No",
     "error": "Algo salió mal. Intenta de nuevo.",
     "view": "Ver documento",
-    "retrying": "Reintentando..."
+    "retrying": "Reintentando...",
+    "loadMore": "Cargar más",
+    "openMenu": "Abrir menú"
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "empty": "No tienes notificaciones",
+    "markAllRead": "Marcar todas como leídas",
+    "justNow": "Ahora",
+    "minutesAgo": "Hace {{count}} min",
+    "hoursAgo": "Hace {{count}} h",
+    "daysAgo": "Hace {{count}} d"
+  },
+  "validation": {
+    "required": "Este campo es obligatorio",
+    "minLength": "Mínimo {{min}} caracteres",
+    "emailInvalid": "Ingresa un email válido",
+    "passwordMin": "Mínimo 6 caracteres"
+  },
+  "toast": {
+    "profileSaved": "Perfil guardado correctamente",
+    "avatarUploaded": "Foto de perfil actualizada",
+    "settingsSaved": "Configuración guardada",
+    "logoUploaded": "Logo actualizado correctamente",
+    "jobCreated": "Oferta de trabajo creada",
+    "jobSaved": "Oferta de trabajo actualizada",
+    "resumeUploaded": "Hoja de vida subida correctamente",
+    "resumeDeleted": "Hoja de vida eliminada",
+    "applicationSubmitted": "Aplicación enviada correctamente",
+    "statusUpdated": "Estado actualizado",
+    "feedbackSent": "Retroalimentación enviada",
+    "reviewerAssigned": "Gestor asignado",
+    "bulkRejected": "{{count}} candidatos rechazados",
+    "bulkAdvanced": "{{count}} candidatos avanzados",
+    "bulkAssigned": "Gestor asignado a {{count}} candidatos"
   }
 }

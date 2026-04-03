@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../context/AuthContext'
-import { getActiveJobs } from '../../services/jobs'
+import { getActiveJobs, getActiveJobsPaginated } from '../../services/jobs'
 import { getApplicationsByCandidate } from '../../services/applications'
 import { getCompany } from '../../services/companies'
 import Card from '../../components/ui/Card'
@@ -12,6 +12,7 @@ import Badge from '../../components/ui/Badge'
 import Button from '../../components/ui/Button'
 import EmptyState from '../../components/ui/EmptyState'
 import Spinner from '../../components/ui/Spinner'
+import JobBoardSkeleton from '../../components/skeletons/JobBoardSkeleton'
 
 // ─── Company Logo ───────────────────────────────────────────────────────────
 function CompanyLogo({ company, size = 'md' }) {
@@ -75,9 +76,12 @@ export default function JobBoard() {
   const [loading, setLoading]         = useState(true)
   const [selectedJobId, setSelectedJobId] = useState(null)
   const [copiedId, setCopiedId] = useState(null)
+  const [lastDoc, setLastDoc]         = useState(null)
+  const [hasMore, setHasMore]         = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
 
   async function handleShare(jobId) {
-    const url = `${window.location.origin}/jobs/${jobId}`
+    const url = `https://us-central1-candydatos.cloudfunctions.net/jobOgMeta/jobs/${jobId}`
     try {
       if (navigator.share) {
         await navigator.share({ title: t('company.jobs.shareTitle'), url })
@@ -93,26 +97,46 @@ export default function JobBoard() {
     }
   }
 
+  async function fetchCompanies(jobList, existingMap = {}) {
+    const newIds = [...new Set(jobList.map(j => j.company_id).filter(id => id && !existingMap[id]))]
+    if (newIds.length === 0) return existingMap
+    const fetched = await Promise.all(newIds.map(id => getCompany(id)))
+    const map = { ...existingMap }
+    fetched.forEach((c, i) => { if (c) map[newIds[i]] = c })
+    return map
+  }
+
   useEffect(() => {
     async function load() {
-      const [fetchedJobs, myApps] = await Promise.all([
-        getActiveJobs(),
+      const [{ jobs: firstPage, lastDoc: ld, hasMore: hm }, myApps] = await Promise.all([
+        getActiveJobsPaginated(),
         getApplicationsByCandidate(firebaseUser.uid),
       ])
-      setJobs(fetchedJobs)
+      setJobs(firstPage)
+      setLastDoc(ld)
+      setHasMore(hm)
       setApplied(new Set(myApps.filter(a => a.status !== 'Draft').map(a => a.job_offer_id)))
 
-      const uniqueCompanyIds = [...new Set(fetchedJobs.map(j => j.company_id).filter(Boolean))]
-      const companies = await Promise.all(uniqueCompanyIds.map(id => getCompany(id)))
-      const map = {}
-      companies.forEach((c, i) => { if (c) map[uniqueCompanyIds[i]] = c })
+      const map = await fetchCompanies(firstPage)
       setCompaniesMap(map)
 
-      if (fetchedJobs.length > 0) setSelectedJobId(fetchedJobs[0].id)
+      if (firstPage.length > 0) setSelectedJobId(firstPage[0].id)
       setLoading(false)
     }
     load()
   }, [firebaseUser?.uid])
+
+  async function loadMoreJobs() {
+    if (!hasMore || loadingMore) return
+    setLoadingMore(true)
+    const { jobs: nextPage, lastDoc: ld, hasMore: hm } = await getActiveJobsPaginated(lastDoc)
+    setJobs(prev => [...prev, ...nextPage])
+    setLastDoc(ld)
+    setHasMore(hm)
+    const map = await fetchCompanies(nextPage, companiesMap)
+    setCompaniesMap(map)
+    setLoadingMore(false)
+  }
 
   const filtered = jobs
     .filter(j => {
@@ -152,7 +176,7 @@ export default function JobBoard() {
     return t('candidate.jobs.monthsAgo', { count: Math.floor(diff / 30) })
   }
 
-  if (loading) return <div className="flex items-center justify-center py-24"><Spinner size="lg" /></div>
+  if (loading) return <JobBoardSkeleton />
 
   return (
     <div className="h-full flex flex-col -m-4 md:-m-6">
@@ -202,6 +226,12 @@ export default function JobBoard() {
                 onClick={() => setSelectedJobId(job.id)}
               />
             ))}
+            {hasMore && (
+              <button onClick={loadMoreJobs} disabled={loadingMore}
+                className="w-full py-3 text-sm font-medium text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors disabled:opacity-50">
+                {loadingMore ? <Spinner size="sm" /> : t('common.loadMore')}
+              </button>
+            )}
             </div>
           </div>
 

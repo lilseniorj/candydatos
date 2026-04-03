@@ -1,63 +1,79 @@
+import { lazy, Suspense } from 'react'
 import { createBrowserRouter } from 'react-router-dom'
+import Spinner from '../components/ui/Spinner'
 
-// Layouts
+// Layouts (kept static — they wrap every page)
 import AuthLayout      from '../layouts/AuthLayout'
 import CompanyLayout   from '../layouts/CompanyLayout'
 import CandidateLayout from '../layouts/CandidateLayout'
 
-// Guards
+// Guards (kept static — they run on every navigation)
 import CompanyGuard   from './guards/CompanyGuard'
 import CandidateGuard from './guards/CandidateGuard'
 import AuthGuard      from './guards/AuthGuard'
 
+// ── Suspense fallback ───────────────────────────────────────────────────────
+const Fallback = (
+  <div className="flex items-center justify-center py-24">
+    <Spinner size="lg" />
+  </div>
+)
+function L({ Component }) {
+  return <Suspense fallback={Fallback}><Component /></Suspense>
+}
+
+// ── Lazy-loaded pages ───────────────────────────────────────────────────────
 // Public
-import LandingPage from '../pages/public/LandingPage'
-import JobPreview  from '../pages/public/JobPreview'
-import SeedPage    from '../pages/SeedPage'
+const LandingPage = lazy(() => import('../pages/public/LandingPage'))
+const JobPreview  = lazy(() => import('../pages/public/JobPreview'))
+const SeedPage    = lazy(() => import('../pages/SeedPage'))
 
 // Auth pages
-import CompanyLogin     from '../pages/auth/CompanyLogin'
-import CompanyRegister  from '../pages/auth/CompanyRegister'
-import CandidateLogin   from '../pages/auth/CandidateLogin'
-import CandidateRegister from '../pages/auth/CandidateRegister'
-import UnifiedLogin      from '../pages/auth/UnifiedLogin'
-import PortalChooser     from '../pages/auth/PortalChooser'
+const CompanyLogin      = lazy(() => import('../pages/auth/CompanyLogin'))
+const CompanyRegister   = lazy(() => import('../pages/auth/CompanyRegister'))
+const CandidateLogin    = lazy(() => import('../pages/auth/CandidateLogin'))
+const CandidateRegister = lazy(() => import('../pages/auth/CandidateRegister'))
+const UnifiedLogin      = lazy(() => import('../pages/auth/UnifiedLogin'))
+const PortalChooser     = lazy(() => import('../pages/auth/PortalChooser'))
 
 // Company pages
-import CompanySetup     from '../pages/company/CompanySetup'
-import CompanyDashboard from '../pages/company/CompanyDashboard'
-import JobList          from '../pages/company/JobList'
-import ApplicantList    from '../pages/company/ApplicantList'
-import Analytics        from '../pages/company/Analytics'
-import TestManager      from '../pages/company/TestManager'
-import CompanySettings  from '../pages/company/CompanySettings'
-import JobEdit          from '../pages/company/JobEdit'
-import ApplicantDetail  from '../pages/company/ApplicantDetail'
+const CompanySetup     = lazy(() => import('../pages/company/CompanySetup'))
+const CompanyDashboard = lazy(() => import('../pages/company/CompanyDashboard'))
+const JobList          = lazy(() => import('../pages/company/JobList'))
+const ApplicantList    = lazy(() => import('../pages/company/ApplicantList'))
+const Analytics        = lazy(() => import('../pages/company/Analytics'))
+const TestManager      = lazy(() => import('../pages/company/TestManager'))
+const CompanySettings  = lazy(() => import('../pages/company/CompanySettings'))
+const JobEdit          = lazy(() => import('../pages/company/JobEdit'))
+const ApplicantDetail  = lazy(() => import('../pages/company/ApplicantDetail'))
+const SkillsMatching   = lazy(() => import('../pages/company/SkillsMatching'))
 
 // Candidate pages
-import CandidateProfile from '../pages/candidate/CandidateProfile'
-import ResumeList       from '../pages/candidate/ResumeList'
-import ResumeDetail     from '../pages/candidate/ResumeDetail'
-import JobBoard         from '../pages/candidate/JobBoard'
-import ApplyFlow        from '../pages/candidate/ApplyFlow'
-import MyApplications   from '../pages/candidate/MyApplications'
+const CandidateProfile = lazy(() => import('../pages/candidate/CandidateProfile'))
+const ResumeList       = lazy(() => import('../pages/candidate/ResumeList'))
+const ResumeDetail     = lazy(() => import('../pages/candidate/ResumeDetail'))
+const JobBoard         = lazy(() => import('../pages/candidate/JobBoard'))
+const ApplyFlow        = lazy(() => import('../pages/candidate/ApplyFlow'))
+const MyApplications     = lazy(() => import('../pages/candidate/MyApplications'))
+const CandidateSettings  = lazy(() => import('../pages/candidate/CandidateSettings'))
 
+// ── Router ──────────────────────────────────────────────────────────────────
 const router = createBrowserRouter([
   // Landing
-  { path: '/', element: <LandingPage /> },
-  { path: '/jobs/:jobId', element: <JobPreview /> },
+  { path: '/', element: <L Component={LandingPage} /> },
+  { path: '/jobs/:jobId', element: <L Component={JobPreview} /> },
 
   // Unified login
   {
     element: <AuthLayout />,
     children: [
-      { path: '/login', element: <UnifiedLogin /> },
-      { path: '/choose-portal', element: <PortalChooser /> },
+      { path: '/login', element: <L Component={UnifiedLogin} /> },
+      { path: '/choose-portal', element: <L Component={PortalChooser} /> },
     ],
   },
 
   // Seed (temporary — remove after use)
-  { path: '/seed', element: <SeedPage /> },
+  { path: '/seed', element: <L Component={SeedPage} /> },
 
   // Company auth
   {
@@ -65,8 +81,8 @@ const router = createBrowserRouter([
     children: [{
       element: <AuthLayout />,
       children: [
-        { path: '/company/login',    element: <CompanyLogin /> },
-        { path: '/company/register', element: <CompanyRegister /> },
+        { path: '/company/login',    element: <L Component={CompanyLogin} /> },
+        { path: '/company/register', element: <L Component={CompanyRegister} /> },
       ],
     }],
   },
@@ -74,7 +90,7 @@ const router = createBrowserRouter([
   // Company setup (no layout guard — needs special check)
   {
     path: '/company/setup',
-    element: <CompanySetup />,
+    element: <L Component={CompanySetup} />,
   },
 
   // Company protected
@@ -83,15 +99,16 @@ const router = createBrowserRouter([
     children: [{
       element: <CompanyLayout />,
       children: [
-        { path: '/company/dashboard',               element: <CompanyDashboard /> },
-        { path: '/company/jobs',                    element: <JobList /> },
-        { path: '/company/jobs/new',                element: <JobEdit /> },
-        { path: '/company/jobs/:jobId/edit',         element: <JobEdit /> },
-        { path: '/company/jobs/:jobId/applicants',              element: <ApplicantList /> },
-        { path: '/company/jobs/:jobId/applicants/:appId',      element: <ApplicantDetail /> },
-        { path: '/company/tests',                   element: <TestManager /> },
-        { path: '/company/analytics',               element: <Analytics /> },
-        { path: '/company/settings',               element: <CompanySettings /> },
+        { path: '/company/dashboard',                          element: <L Component={CompanyDashboard} /> },
+        { path: '/company/jobs',                               element: <L Component={JobList} /> },
+        { path: '/company/jobs/new',                           element: <L Component={JobEdit} /> },
+        { path: '/company/jobs/:jobId/edit',                   element: <L Component={JobEdit} /> },
+        { path: '/company/jobs/:jobId/applicants',             element: <L Component={ApplicantList} /> },
+        { path: '/company/jobs/:jobId/applicants/:appId',      element: <L Component={ApplicantDetail} /> },
+        { path: '/company/tests',                              element: <L Component={TestManager} /> },
+        { path: '/company/analytics',                          element: <L Component={Analytics} /> },
+        { path: '/company/skills',                             element: <L Component={SkillsMatching} /> },
+        { path: '/company/settings',                           element: <L Component={CompanySettings} /> },
       ],
     }],
   },
@@ -102,8 +119,8 @@ const router = createBrowserRouter([
     children: [{
       element: <AuthLayout />,
       children: [
-        { path: '/candidate/login',    element: <CandidateLogin /> },
-        { path: '/candidate/register', element: <CandidateRegister /> },
+        { path: '/candidate/login',    element: <L Component={CandidateLogin} /> },
+        { path: '/candidate/register', element: <L Component={CandidateRegister} /> },
       ],
     }],
   },
@@ -114,12 +131,13 @@ const router = createBrowserRouter([
     children: [{
       element: <CandidateLayout />,
       children: [
-        { path: '/candidate/profile',            element: <CandidateProfile /> },
-        { path: '/candidate/resumes',            element: <ResumeList /> },
-        { path: '/candidate/resumes/:resumeId',  element: <ResumeDetail /> },
-        { path: '/candidate/jobs',               element: <JobBoard /> },
-        { path: '/candidate/apply/:jobId',       element: <ApplyFlow /> },
-        { path: '/candidate/applications',       element: <MyApplications /> },
+        { path: '/candidate/profile',            element: <L Component={CandidateProfile} /> },
+        { path: '/candidate/resumes',            element: <L Component={ResumeList} /> },
+        { path: '/candidate/resumes/:resumeId',  element: <L Component={ResumeDetail} /> },
+        { path: '/candidate/jobs',               element: <L Component={JobBoard} /> },
+        { path: '/candidate/apply/:jobId',       element: <L Component={ApplyFlow} /> },
+        { path: '/candidate/applications',       element: <L Component={MyApplications} /> },
+        { path: '/candidate/settings',           element: <L Component={CandidateSettings} /> },
       ],
     }],
   },

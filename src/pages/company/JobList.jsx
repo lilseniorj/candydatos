@@ -33,7 +33,7 @@ export default function JobList() {
   const [copiedId, setCopiedId]       = useState(null)
 
   async function handleShare(jobId) {
-    const url = `${window.location.origin}/jobs/${jobId}`
+    const url = `https://us-central1-candydatos.cloudfunctions.net/jobOgMeta/jobs/${jobId}`
     try {
       if (navigator.share) {
         await navigator.share({ title: t('company.jobs.shareTitle'), url })

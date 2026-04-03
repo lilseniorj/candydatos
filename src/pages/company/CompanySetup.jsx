@@ -93,9 +93,9 @@ export default function CompanySetup() {
           <h2 className="font-semibold text-gray-900 dark:text-white mb-4">{t('setup.createNew')}</h2>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <Input label={t('setup.companyName')} error={errors.name?.message}
-              {...register('name', { required: true })} />
+              {...register('name', { required: t('validation.required'), minLength: { value: 2, message: t('validation.minLength', { min: 2 }) } })} />
             <Input label={t('setup.sector')} error={errors.sector?.message}
-              {...register('sector', { required: true })} />
+              {...register('sector', { required: t('validation.required') })} />
             <div className="flex flex-col gap-1">
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('setup.bio')}</label>
               <textarea rows={3}

@@ -10,10 +10,13 @@ import Button from '../../components/ui/Button'
 import Input from '../../components/ui/Input'
 import Spinner from '../../components/ui/Spinner'
 import EmptyState from '../../components/ui/EmptyState'
+import ResumeListSkeleton from '../../components/skeletons/ResumeListSkeleton'
+import { useToast } from '../../context/ToastContext'
 
 export default function ResumeList() {
   const { t } = useTranslation()
   const { firebaseUser, userDoc, refreshUserDoc } = useAuth()
+  const toast = useToast()
   const [resumes, setResumes]       = useState([])
   const [loading, setLoading]       = useState(true)
   const [uploading, setUploading]   = useState(false)
@@ -37,8 +40,10 @@ export default function ResumeList() {
       setResumeName('')
       await updateCandidateProfile(firebaseUser.uid, { ...userDoc }, resumes.length + 1)
       await refreshUserDoc()
+      toast.success(t('toast.resumeUploaded'))
     } catch (err) {
       setUploadError(t('common.error'))
+      toast.error(t('common.error'))
       console.error('Resume upload error:', err)
     } finally {
       setUploading(false)
@@ -52,6 +57,7 @@ export default function ResumeList() {
     setResumes(updated)
     await updateCandidateProfile(firebaseUser.uid, userDoc, updated.length)
     await refreshUserDoc()
+    toast.success(t('toast.resumeDeleted'))
   }
 
   function getScore(r) {
@@ -69,7 +75,7 @@ export default function ResumeList() {
     return '—'
   }
 
-  if (loading) return <div className="flex items-center justify-center py-24"><Spinner size="lg" /></div>
+  if (loading) return <ResumeListSkeleton />
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">

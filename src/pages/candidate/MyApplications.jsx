@@ -10,6 +10,7 @@ import Badge from '../../components/ui/Badge'
 import Button from '../../components/ui/Button'
 import EmptyState from '../../components/ui/EmptyState'
 import Spinner from '../../components/ui/Spinner'
+import ApplicationsSkeleton from '../../components/skeletons/ApplicationsSkeleton'
 
 // ─── Pipeline stages (same as company side) ─────────────────────────────────
 const STAGES = ['received', 'reviewing', 'interview', 'technical', 'offer', 'hired']
@@ -93,7 +94,7 @@ export default function MyApplications() {
     load()
   }, [firebaseUser?.uid])
 
-  if (loading) return <div className="flex items-center justify-center py-24"><Spinner size="lg" /></div>
+  if (loading) return <ApplicationsSkeleton />
 
   const visible = applications.filter(a => a.status !== 'Draft')
   const selected = visible.find(a => a.id === selectedId)

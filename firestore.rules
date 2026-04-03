@@ -90,5 +90,12 @@ service cloud.firestore {
       allow read:   if isAuth();
       allow create: if isAuth();
     }
+
+    // ── notifications (in-app) ──────────────────────────────────────────────
+    match /notifications/{notifId} {
+      allow read:   if isAuth() && resource.data.candidate_id == request.auth.uid;
+      allow create: if isAuth();
+      allow update: if isAuth() && resource.data.candidate_id == request.auth.uid;
+    }
   }
 }

@@ -5,7 +5,7 @@ import { getApplication, updateApplicationPipeline, addApplicationNote, updateAp
 import { getCandidate } from '../../services/candidates'
 import { useCompany } from '../../context/CompanyContext'
 import { useAuth } from '../../context/AuthContext'
-import { sendRejectionEmail, sendPipelineEmail } from '../../services/notifications'
+import { sendRejectionEmail, sendPipelineEmail, createNotification } from '../../services/notifications'
 import { getJob } from '../../services/jobs'
 import { getResumesByCandidate } from '../../services/resumes'
 import { getTestResultsByApplication } from '../../services/testResults'
@@ -159,18 +159,30 @@ export default function ApplicantDetail() {
     if (statusMap[nextStage]) await updateApplicationStatus(appId, statusMap[nextStage])
     setApp(prev => ({ ...prev, pipeline_stage: nextStage, stage_history: newHistory }))
 
-    // Send pipeline email notification
-    if (candidate?.email && job) {
+    // Send notifications (email + in-app)
+    if (job) {
+      const candidateName = [candidate?.first_name, candidate?.last_name].filter(Boolean).join(' ')
+      const stageLabels = { reviewing: 'En revisión', interview: 'Entrevista', technical: 'Prueba técnica', offer: 'Oferta', hired: 'Contratado' }
       try {
-        await sendPipelineEmail({
-          candidateEmail: candidate.email,
-          candidateName: [candidate.first_name, candidate.last_name].filter(Boolean).join(' '),
+        await createNotification(app.candidate_id, {
+          type: nextStage === 'hired' ? 'hired' : 'status_change',
+          title: nextStage === 'hired' ? `¡Felicidades! Has sido contratado` : `Tu aplicación avanzó a: ${stageLabels[nextStage] || nextStage}`,
+          body: `Tu aplicación a ${job.title} en ${company?.commercial_name || ''} cambió de estado.`,
           jobTitle: job.title,
-          companyName: company?.commercial_name || '',
-          newStage: nextStage,
+          jobId: job.id,
+          appId,
         })
-      } catch (err) {
-        console.error('Failed to queue pipeline email:', err)
+      } catch (err) { console.error('Failed to create in-app notification:', err) }
+      if (candidate?.email) {
+        try {
+          await sendPipelineEmail({
+            candidateEmail: candidate.email,
+            candidateName,
+            jobTitle: job.title,
+            companyName: company?.commercial_name || '',
+            newStage: nextStage,
+          })
+        } catch (err) { console.error('Failed to queue pipeline email:', err) }
       }
     }
 
@@ -185,18 +197,28 @@ export default function ApplicantDetail() {
     await updateApplicationStatus(appId, 'Rejected', rejectReason || null)
     setApp(prev => ({ ...prev, pipeline_stage: REJECTED, stage_history: newHistory, status: 'Rejected', feedback_to_candidate: rejectReason }))
 
-    // Queue rejection email
-    if (candidate?.email && job) {
+    // Send notifications (in-app + email)
+    if (job) {
       try {
-        await sendRejectionEmail({
-          candidateEmail: candidate.email,
-          candidateName: [candidate.first_name, candidate.last_name].filter(Boolean).join(' '),
+        await createNotification(app.candidate_id, {
+          type: 'rejected',
+          title: 'Tu aplicación no fue seleccionada',
+          body: rejectReason || `Tu aplicación a ${job.title} en ${company?.commercial_name || ''} no avanzó en el proceso.`,
           jobTitle: job.title,
-          companyName: company?.commercial_name || '',
-          feedback: rejectReason,
+          jobId: job.id,
+          appId,
         })
-      } catch (err) {
-        console.error('Failed to queue rejection email:', err)
+      } catch (err) { console.error('Failed to create in-app notification:', err) }
+      if (candidate?.email) {
+        try {
+          await sendRejectionEmail({
+            candidateEmail: candidate.email,
+            candidateName: [candidate.first_name, candidate.last_name].filter(Boolean).join(' '),
+            jobTitle: job.title,
+            companyName: company?.commercial_name || '',
+            feedback: rejectReason,
+          })
+        } catch (err) { console.error('Failed to queue rejection email:', err) }
       }
     }
 

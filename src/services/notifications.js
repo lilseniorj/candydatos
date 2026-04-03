@@ -1,5 +1,75 @@
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
+import {
+  collection, doc, addDoc, updateDoc, getDocs, query, where, orderBy, limit,
+  serverTimestamp, onSnapshot, writeBatch,
+} from 'firebase/firestore'
 import { db } from '../firebase/config'
+
+// ─── In-App Notifications ───────────────────────────────────────────────────
+
+/**
+ * Create an in-app notification for a candidate.
+ */
+export async function createNotification(candidateId, data) {
+  return addDoc(collection(db, 'notifications'), {
+    candidate_id: candidateId,
+    type: data.type,       // 'status_change' | 'feedback' | 'hired' | 'rejected'
+    title: data.title,
+    body: data.body,
+    job_title: data.jobTitle || '',
+    job_id: data.jobId || '',
+    app_id: data.appId || '',
+    read: false,
+    created_at: serverTimestamp(),
+  })
+}
+
+/**
+ * Subscribe to real-time notifications for a candidate.
+ * Returns an unsubscribe function.
+ */
+export function subscribeToNotifications(candidateId, callback) {
+  const q = query(
+    collection(db, 'notifications'),
+    where('candidate_id', '==', candidateId),
+    orderBy('created_at', 'desc'),
+    limit(50),
+  )
+  return onSnapshot(q,
+    (snap) => {
+      const notifications = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      callback(notifications)
+    },
+    (error) => {
+      console.warn('[Notifications] Listener error (index may be building):', error.message)
+      callback([])
+    },
+  )
+}
+
+/**
+ * Mark a single notification as read.
+ */
+export async function markAsRead(notificationId) {
+  await updateDoc(doc(db, 'notifications', notificationId), { read: true })
+}
+
+/**
+ * Mark all unread notifications as read for a candidate.
+ */
+export async function markAllAsRead(candidateId) {
+  const q = query(
+    collection(db, 'notifications'),
+    where('candidate_id', '==', candidateId),
+    where('read', '==', false),
+  )
+  const snap = await getDocs(q)
+  if (snap.empty) return
+  const batch = writeBatch(db)
+  snap.docs.forEach(d => batch.update(d.ref, { read: true }))
+  await batch.commit()
+}
+
+// ─── Email Notifications ────────────────────────────────────────────────────
 
 /**
  * Queue a rejection notification email.

@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useCompany } from '../../context/CompanyContext'
-import { getApplicationsByJob, updateApplicationStatus, assignReviewer } from '../../services/applications'
+import { getApplicationsByJob, getApplicationsByJobPaginated, updateApplicationStatus, assignReviewer, bulkUpdateStatus, bulkAssignReviewer } from '../../services/applications'
+import { createNotification } from '../../services/notifications'
 import { getCompanyUsers } from '../../services/companies'
 import { getJob } from '../../services/jobs'
 import { getCandidate } from '../../services/candidates'
@@ -14,6 +15,8 @@ import Input from '../../components/ui/Input'
 import Modal from '../../components/ui/Modal'
 import EmptyState from '../../components/ui/EmptyState'
 import Spinner from '../../components/ui/Spinner'
+import ApplicantListSkeleton from '../../components/skeletons/ApplicantListSkeleton'
+import { useToast } from '../../context/ToastContext'
 
 const STATUSES = ['All', 'Pending', 'Reviewed', 'Testing', 'Rejected', 'Hired']
 
@@ -22,6 +25,7 @@ export default function ApplicantList() {
   const { jobId } = useParams()
   const navigate = useNavigate()
   const { company } = useCompany()
+  const toast = useToast()
 
   const [job, setJob]                       = useState(null)
   const [apps, setApps]                     = useState([])
@@ -30,6 +34,9 @@ export default function ApplicantList() {
   const [search, setSearch]                 = useState('')
   const [loading, setLoading]               = useState(true)
   const [companyUsers, setCompanyUsers]     = useState([])
+  const [lastDoc, setLastDoc]               = useState(null)
+  const [hasMore, setHasMore]               = useState(false)
+  const [loadingMore, setLoadingMore]       = useState(false)
 
   const [feedbackModal, setFeedbackModal]   = useState(null)
   const [feedbackText, setFeedbackText]     = useState('')
@@ -37,24 +44,131 @@ export default function ApplicantList() {
   const [selectedReviewer, setSelectedReviewer] = useState('')
   const [assigning, setAssigning]           = useState(false)
 
+  // Bulk actions
+  const [selected, setSelected]             = useState(new Set())
+  const [bulkModal, setBulkModal]           = useState(null) // 'reject' | 'advance' | 'assign'
+  const [bulkFeedback, setBulkFeedback]     = useState('')
+  const [bulkReviewer, setBulkReviewer]     = useState('')
+  const [bulkProcessing, setBulkProcessing] = useState(false)
+
+  function toggleSelect(appId) {
+    setSelected(prev => {
+      const next = new Set(prev)
+      if (next.has(appId)) next.delete(appId)
+      else next.add(appId)
+      return next
+    })
+  }
+
+  function toggleSelectAll() {
+    if (selected.size === filtered.length) setSelected(new Set())
+    else setSelected(new Set(filtered.map(a => a.id)))
+  }
+
+  async function handleBulkReject() {
+    setBulkProcessing(true)
+    try {
+      const ids = [...selected]
+      await bulkUpdateStatus(ids, 'Rejected', bulkFeedback || null)
+      setApps(prev => prev.map(a => ids.includes(a.id) ? { ...a, status: 'Rejected', feedback_to_candidate: bulkFeedback || a.feedback_to_candidate } : a))
+      // Send in-app notifications
+      const selectedApps = apps.filter(a => ids.includes(a.id))
+      await Promise.all(selectedApps.map(a =>
+        createNotification(a.candidate_id, {
+          type: 'rejected',
+          title: 'Tu aplicación no fue seleccionada',
+          body: bulkFeedback || `Tu aplicación a ${job?.title || ''} no avanzó en el proceso.`,
+          jobTitle: job?.title || '',
+          jobId: jobId,
+          appId: a.id,
+        }).catch(err => console.error('Notification error:', err))
+      ))
+      toast.success(t('toast.bulkRejected', { count: ids.length }))
+      setSelected(new Set())
+      setBulkModal(null)
+      setBulkFeedback('')
+    } finally { setBulkProcessing(false) }
+  }
+
+  async function handleBulkAdvance() {
+    setBulkProcessing(true)
+    try {
+      const ids = [...selected]
+      await bulkUpdateStatus(ids, 'Reviewed')
+      setApps(prev => prev.map(a => ids.includes(a.id) ? { ...a, status: 'Reviewed' } : a))
+      // Send in-app notifications
+      const selectedApps = apps.filter(a => ids.includes(a.id))
+      await Promise.all(selectedApps.map(a =>
+        createNotification(a.candidate_id, {
+          type: 'status_change',
+          title: 'Tu aplicación está siendo revisada',
+          body: `Tu aplicación a ${job?.title || ''} avanzó a la etapa de revisión.`,
+          jobTitle: job?.title || '',
+          jobId: jobId,
+          appId: a.id,
+        }).catch(err => console.error('Notification error:', err))
+      ))
+      toast.success(t('toast.bulkAdvanced', { count: ids.length }))
+      setSelected(new Set())
+      setBulkModal(null)
+    } finally { setBulkProcessing(false) }
+  }
+
+  async function handleBulkAssign() {
+    if (!bulkReviewer) return
+    setBulkProcessing(true)
+    try {
+      const ids = [...selected]
+      await bulkAssignReviewer(ids, bulkReviewer)
+      setApps(prev => prev.map(a => ids.includes(a.id) ? { ...a, reviewer_id: bulkReviewer } : a))
+      toast.success(t('toast.bulkAssigned', { count: ids.length }))
+      setSelected(new Set())
+      setBulkModal(null)
+      setBulkReviewer('')
+    } finally { setBulkProcessing(false) }
+  }
+
+  async function fetchCandidates(appList, existingMap = {}) {
+    const newIds = [...new Set(appList.map(ap => ap.candidate_id).filter(id => id && !existingMap[id]))]
+    if (newIds.length === 0) return existingMap
+    const candidates = await Promise.all(newIds.map(id => getCandidate(id)))
+    const map = { ...existingMap }
+    candidates.forEach((c, i) => { if (c) map[newIds[i]] = c })
+    return map
+  }
+
   useEffect(() => {
     async function load() {
-      const [j, a] = await Promise.all([getJob(jobId), getApplicationsByJob(jobId)])
+      const [j, { applications: firstPage, lastDoc: ld, hasMore: hm }] = await Promise.all([
+        getJob(jobId),
+        getApplicationsByJobPaginated(jobId),
+      ])
       setJob(j)
-      const nonDraft = a.filter(ap => ap.status !== 'Draft')
+      const nonDraft = firstPage.filter(ap => ap.status !== 'Draft')
       setApps(nonDraft)
+      setLastDoc(ld)
+      setHasMore(hm)
 
-      // Fetch candidate info for all applicants
-      const ids = [...new Set(nonDraft.map(ap => ap.candidate_id).filter(Boolean))]
-      const candidates = await Promise.all(ids.map(id => getCandidate(id)))
-      const map = {}
-      candidates.forEach((c, i) => { if (c) map[ids[i]] = c })
+      const map = await fetchCandidates(nonDraft)
       setCandidatesMap(map)
 
       setLoading(false)
     }
     load()
   }, [jobId])
+
+  async function loadMoreApps() {
+    if (!hasMore || loadingMore) return
+    setLoadingMore(true)
+    const { applications: nextPage, lastDoc: ld, hasMore: hm } = await getApplicationsByJobPaginated(jobId, lastDoc)
+    const nonDraft = nextPage.filter(ap => ap.status !== 'Draft')
+    setApps(prev => [...prev, ...nonDraft])
+    setLastDoc(ld)
+    setHasMore(hm)
+    const map = await fetchCandidates(nonDraft, candidatesMap)
+    setCandidatesMap(map)
+    setLoadingMore(false)
+  }
 
   useEffect(() => {
     if (!company?.id) return
@@ -79,11 +193,35 @@ export default function ApplicantList() {
   async function handleStatus(appId, status) {
     await updateApplicationStatus(appId, status)
     setApps(prev => prev.map(a => a.id === appId ? { ...a, status } : a))
+    // Send in-app notification
+    const targetApp = apps.find(a => a.id === appId)
+    if (targetApp && job) {
+      const statusLabels = { Reviewed: 'En revisión', Testing: 'En pruebas', Hired: 'Contratado', Rejected: 'Rechazado' }
+      createNotification(targetApp.candidate_id, {
+        type: status === 'Hired' ? 'hired' : status === 'Rejected' ? 'rejected' : 'status_change',
+        title: status === 'Hired' ? '¡Felicidades! Has sido contratado' : status === 'Rejected' ? 'Tu aplicación no fue seleccionada' : `Tu aplicación cambió a: ${statusLabels[status] || status}`,
+        body: `Tu aplicación a ${job.title} cambió de estado.`,
+        jobTitle: job.title,
+        jobId: jobId,
+        appId,
+      }).catch(err => console.error('Notification error:', err))
+    }
   }
 
   async function handleFeedback() {
     await updateApplicationStatus(feedbackModal.id, feedbackModal.status, feedbackText)
     setApps(prev => prev.map(a => a.id === feedbackModal.id ? { ...a, feedback_to_candidate: feedbackText } : a))
+    // Send in-app notification with feedback
+    if (feedbackModal && job) {
+      createNotification(feedbackModal.candidate_id, {
+        type: 'feedback',
+        title: 'El reclutador te dejó un comentario',
+        body: feedbackText || `Tienes un nuevo comentario en tu aplicación a ${job.title}.`,
+        jobTitle: job.title,
+        jobId: jobId,
+        appId: feedbackModal.id,
+      }).catch(err => console.error('Notification error:', err))
+    }
     setFeedbackModal(null)
     setFeedbackText('')
   }
@@ -113,7 +251,7 @@ export default function ApplicantList() {
     ...companyUsers.map(u => ({ value: u.id, label: `${u.full_name} (${u.role})` })),
   ]
 
-  if (loading) return <div className="flex items-center justify-center py-24"><Spinner size="lg" /></div>
+  if (loading) return <ApplicantListSkeleton />
 
   return (
     <div className="space-y-6">
@@ -187,10 +325,32 @@ export default function ApplicantList() {
         )
       })()}
 
+      {/* ── Bulk action bar ──────────────────────────────────────────────── */}
+      {selected.size > 0 && (
+        <div className="flex items-center gap-3 p-3 rounded-xl bg-brand-50 dark:bg-brand-900/20 border border-brand-200 dark:border-brand-800">
+          <span className="text-sm font-medium text-brand-700 dark:text-brand-300">
+            {selected.size} {t('company.bulk.selected')}
+          </span>
+          <div className="flex-1" />
+          <Button size="sm" variant="danger" onClick={() => setBulkModal('reject')}>
+            {t('company.bulk.reject')}
+          </Button>
+          <Button size="sm" variant="secondary" onClick={() => setBulkModal('advance')}>
+            {t('company.bulk.advance')}
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => setBulkModal('assign')}>
+            {t('company.bulk.assignAll')}
+          </Button>
+          <button onClick={() => setSelected(new Set())} className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+            {t('common.cancel')}
+          </button>
+        </div>
+      )}
+
       {/* ── Filters ──────────────────────────────────────────────────────── */}
       <div className="flex items-center gap-3 flex-wrap">
         <div className="flex-1 min-w-50">
-          <Input placeholder={t('company.applicants.search')} value={search} onChange={e => setSearch(e.target.value)} />
+          <Input placeholder={t('company.applicants.search')} value={search} onChange={e => setSearch(e.target.value)} aria-label={t('company.applicants.search')} />
         </div>
         <Select options={filterOpts} value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="w-40" />
         <span className="text-sm text-gray-500 dark:text-gray-400">{filtered.length} {t('company.jobs.applicants').toLowerCase()}</span>
@@ -201,6 +361,14 @@ export default function ApplicantList() {
         ? <EmptyState icon={<span className="text-5xl">👥</span>} title={t('company.applicants.empty')} />
         : (
           <div className="space-y-2">
+            {/* Select all */}
+            <div className="flex items-center gap-2 px-1">
+              <input type="checkbox" checked={selected.size === filtered.length && filtered.length > 0}
+                onChange={toggleSelectAll}
+                className="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500"
+                aria-label={t('company.bulk.selectAll')} />
+              <span className="text-xs text-gray-500 dark:text-gray-400">{t('company.bulk.selectAll')}</span>
+            </div>
             {filtered.map(app => {
               const candidate = candidatesMap[app.candidate_id]
               const name = [candidate?.first_name, candidate?.last_name].filter(Boolean).join(' ') || app.candidate_id.slice(0, 12) + '…'
@@ -209,9 +377,14 @@ export default function ApplicantList() {
               const scoreColor = score >= 70 ? 'text-green-500' : score >= 40 ? 'text-orange-500' : 'text-red-400'
 
               return (
-                <Card key={app.id} className="p-4 hover:ring-2 hover:ring-brand-300 dark:hover:ring-brand-700 transition-all cursor-pointer"
+                <Card key={app.id} className={`p-4 hover:ring-2 hover:ring-brand-300 dark:hover:ring-brand-700 transition-all cursor-pointer ${selected.has(app.id) ? 'ring-2 ring-brand-400 dark:ring-brand-600 bg-brand-50/50 dark:bg-brand-900/10' : ''}`}
                   onClick={() => navigate(`/company/jobs/${jobId}/applicants/${app.id}`)}>
                   <div className="flex items-center gap-4">
+                    {/* Checkbox */}
+                    <div className="shrink-0" onClick={e => e.stopPropagation()}>
+                      <input type="checkbox" checked={selected.has(app.id)} onChange={() => toggleSelect(app.id)}
+                        className="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500" />
+                    </div>
                     {/* Avatar */}
                     <div className="w-10 h-10 rounded-full bg-brand-100 dark:bg-brand-900/40 flex items-center justify-center text-brand-600 dark:text-brand-300 text-sm font-bold shrink-0">
                       {candidate?.first_name?.[0]?.toUpperCase() || '?'}{candidate?.last_name?.[0]?.toUpperCase() || ''}
@@ -252,10 +425,10 @@ export default function ApplicantList() {
 
                     {/* Actions */}
                     <div className="flex items-center gap-1.5 shrink-0" onClick={e => e.stopPropagation()}>
-                      <Button size="sm" variant="ghost" onClick={() => { setAssignModal(app); setSelectedReviewer(app.reviewer_id || '') }}>
+                      <Button size="sm" variant="ghost" aria-label={t('company.applicants.assignManager')} onClick={() => { setAssignModal(app); setSelectedReviewer(app.reviewer_id || '') }}>
                         👤
                       </Button>
-                      <Button size="sm" variant="ghost"
+                      <Button size="sm" variant="ghost" aria-label={t('company.applicants.feedback')}
                         onClick={() => { setFeedbackModal(app); setFeedbackText(app.feedback_to_candidate || '') }}>
                         💬
                       </Button>
@@ -264,6 +437,12 @@ export default function ApplicantList() {
                 </Card>
               )
             })}
+            {hasMore && (
+              <button onClick={loadMoreApps} disabled={loadingMore}
+                className="w-full py-3 rounded-lg border border-gray-200 dark:border-gray-700 text-sm font-medium text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors disabled:opacity-50">
+                {loadingMore ? <Spinner size="sm" /> : t('common.loadMore')}
+              </button>
+            )}
           </div>
         )
       }
@@ -281,12 +460,71 @@ export default function ApplicantList() {
       {/* Feedback modal */}
       <Modal open={!!feedbackModal} onClose={() => setFeedbackModal(null)} title={t('company.applicants.feedback')}>
         <div className="space-y-4">
+          <div className="flex flex-wrap gap-1.5">
+            {['profileNotAligned', 'positionFilled', 'insufficientExperience', 'missingSkills', 'keepInTouch'].map(key => (
+              <button key={key} onClick={() => setFeedbackText(t(`company.feedbackTemplates.${key}`))}
+                className="px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-brand-100 hover:text-brand-700 dark:hover:bg-brand-900/40 dark:hover:text-brand-300 transition-colors">
+                {t(`company.feedbackTemplates.${key}Label`)}
+              </button>
+            ))}
+          </div>
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('company.applicants.feedback')}</label>
             <textarea rows={3} value={feedbackText} onChange={e => setFeedbackText(e.target.value)}
               className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500" />
           </div>
           <Button className="w-full" onClick={handleFeedback}>{t('common.save')}</Button>
+        </div>
+      </Modal>
+
+      {/* Bulk reject modal */}
+      <Modal open={bulkModal === 'reject'} onClose={() => { setBulkModal(null); setBulkFeedback('') }}
+        title={t('company.bulk.rejectTitle', { count: selected.size })}>
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600 dark:text-gray-400">{t('company.bulk.rejectDesc', { count: selected.size })}</p>
+          <div className="flex flex-wrap gap-1.5">
+            {['profileNotAligned', 'positionFilled', 'insufficientExperience', 'missingSkills', 'keepInTouch'].map(key => (
+              <button key={key} onClick={() => setBulkFeedback(t(`company.feedbackTemplates.${key}`))}
+                className="px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-brand-100 hover:text-brand-700 dark:hover:bg-brand-900/40 dark:hover:text-brand-300 transition-colors">
+                {t(`company.feedbackTemplates.${key}Label`)}
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('company.bulk.feedbackOptional')}</label>
+            <textarea rows={3} value={bulkFeedback} onChange={e => setBulkFeedback(e.target.value)}
+              placeholder={t('company.bulk.feedbackPlaceholder')}
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500" />
+          </div>
+          <div className="flex gap-3">
+            <Button variant="ghost" className="flex-1" onClick={() => { setBulkModal(null); setBulkFeedback('') }}>{t('common.cancel')}</Button>
+            <Button variant="danger" className="flex-1" onClick={handleBulkReject} loading={bulkProcessing}>{t('company.bulk.confirmReject')}</Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Bulk advance modal */}
+      <Modal open={bulkModal === 'advance'} onClose={() => setBulkModal(null)}
+        title={t('company.bulk.advanceTitle', { count: selected.size })}>
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600 dark:text-gray-400">{t('company.bulk.advanceDesc', { count: selected.size })}</p>
+          <div className="flex gap-3">
+            <Button variant="ghost" className="flex-1" onClick={() => setBulkModal(null)}>{t('common.cancel')}</Button>
+            <Button className="flex-1" onClick={handleBulkAdvance} loading={bulkProcessing}>{t('common.confirm')}</Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Bulk assign modal */}
+      <Modal open={bulkModal === 'assign'} onClose={() => { setBulkModal(null); setBulkReviewer('') }}
+        title={t('company.bulk.assignTitle', { count: selected.size })}>
+        <div className="space-y-4">
+          <Select label={t('company.applicants.selectManager')} options={reviewerOpts}
+            value={bulkReviewer} onChange={e => setBulkReviewer(e.target.value)} />
+          <div className="flex gap-3">
+            <Button variant="ghost" className="flex-1" onClick={() => { setBulkModal(null); setBulkReviewer('') }}>{t('common.cancel')}</Button>
+            <Button className="flex-1" onClick={handleBulkAssign} loading={bulkProcessing}>{t('common.confirm')}</Button>
+          </div>
         </div>
       </Modal>
     </div>

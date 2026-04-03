@@ -1,6 +1,6 @@
 import {
   collection, doc, addDoc, updateDoc, deleteDoc, getDocs, getDoc,
-  query, where, orderBy, serverTimestamp, Timestamp,
+  query, where, orderBy, serverTimestamp, Timestamp, limit, startAfter,
 } from 'firebase/firestore'
 import { db } from '../firebase/config'
 
@@ -38,6 +38,25 @@ export async function getActiveJobs() {
   const q    = query(collection(db, 'job_offers'), where('status', '==', 'Active'), orderBy('created_at', 'desc'))
   const snap = await getDocs(q)
   return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+}
+
+const JOBS_PAGE_SIZE = 20
+
+export async function getActiveJobsPaginated(lastDoc = null) {
+  const constraints = [
+    where('status', '==', 'Active'),
+    orderBy('created_at', 'desc'),
+    limit(JOBS_PAGE_SIZE),
+  ]
+  if (lastDoc) constraints.push(startAfter(lastDoc))
+
+  const q    = query(collection(db, 'job_offers'), ...constraints)
+  const snap = await getDocs(q)
+  return {
+    jobs:    snap.docs.map(d => ({ id: d.id, ...d.data() })),
+    lastDoc: snap.docs[snap.docs.length - 1] || null,
+    hasMore: snap.docs.length === JOBS_PAGE_SIZE,
+  }
 }
 
 export async function getJob(jobId) {

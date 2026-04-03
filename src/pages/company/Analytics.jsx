@@ -10,6 +10,7 @@ import Card from '../../components/ui/Card'
 import Input from '../../components/ui/Input'
 import Select from '../../components/ui/Select'
 import Spinner from '../../components/ui/Spinner'
+import AnalyticsSkeleton from '../../components/skeletons/AnalyticsSkeleton'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   RadarChart, PolarGrid, PolarAngleAxis, Radar, Legend,
@@ -36,14 +37,15 @@ export default function Analytics() {
     if (!company?.id) return
     async function load() {
       const jobs = await getJobsByCompany(company.id)
-      const funnel = []
-      const ivAccum = Object.fromEntries(INTERVIEW_TRAITS.map(t => [t, 0]))
-      let ivCount = 0
-      const allInterviews = []
 
-      for (const job of jobs) {
-        const apps = await getApplicationsByJob(job.id)
-        const submitted = apps.filter(a => a.status !== 'Draft')
+      // Fetch all applications in parallel (instead of sequential loop)
+      const appsPerJob = await Promise.all(jobs.map(j => getApplicationsByJob(j.id)))
+
+      const funnel = []
+      const allSubmitted = []
+
+      jobs.forEach((job, i) => {
+        const submitted = appsPerJob[i].filter(a => a.status !== 'Draft')
         funnel.push({
           name:     job.title.length > 20 ? job.title.slice(0, 18) + '…' : job.title,
           Pending:  submitted.filter(a => a.status === 'Pending').length,
@@ -52,37 +54,46 @@ export default function Analytics() {
           Hired:    submitted.filter(a => a.status === 'Hired').length,
           Rejected: submitted.filter(a => a.status === 'Rejected').length,
         })
+        submitted.forEach(app => allSubmitted.push({ app, job }))
+      })
 
-        for (const app of submitted) {
-          const results = await getTestResultsByApplication(app.id)
-          for (const r of results) {
-            if (!r.trait_scores) continue
-            // Detect interview results (have 'communication' trait)
-            if (r.trait_scores.communication != null) {
-              INTERVIEW_TRAITS.forEach(trait => { ivAccum[trait] += r.trait_scores[trait] || 0 })
-              ivCount++
-              // Fetch candidate name for the list
-              let candidateName = app.candidate_id.slice(0, 10) + '…'
-              try {
-                const c = await getCandidate(app.candidate_id)
-                if (c) candidateName = [c.first_name, c.last_name].filter(Boolean).join(' ')
-              } catch {}
-              allInterviews.push({
-                candidateName,
-                jobId: job.id,
-                appId: app.id,
-                jobTitle: job.title,
-                score: r.score,
-                passed: r.gemini_evaluation?.passed,
-                traits: r.trait_scores,
-                feedback: r.gemini_evaluation?.feedback,
-                video_url: r.video_url,
-                date: r.completed_at,
-              })
-            }
-          }
+      // Fetch all test results in parallel
+      const resultsPerApp = await Promise.all(allSubmitted.map(({ app }) => getTestResultsByApplication(app.id)))
+
+      const ivAccum = Object.fromEntries(INTERVIEW_TRAITS.map(t => [t, 0]))
+      let ivCount = 0
+      const interviewEntries = []
+
+      allSubmitted.forEach(({ app, job }, i) => {
+        for (const r of resultsPerApp[i]) {
+          if (!r.trait_scores || r.trait_scores.communication == null) continue
+          INTERVIEW_TRAITS.forEach(trait => { ivAccum[trait] += r.trait_scores[trait] || 0 })
+          ivCount++
+          interviewEntries.push({ app, job, r })
         }
-      }
+      })
+
+      // Fetch unique candidates in parallel (deduplicated)
+      const uniqueCandidateIds = [...new Set(interviewEntries.map(e => e.app.candidate_id))]
+      const candidateDocs = await Promise.all(uniqueCandidateIds.map(id => getCandidate(id).catch(() => null)))
+      const candidateMap = {}
+      uniqueCandidateIds.forEach((id, i) => { if (candidateDocs[i]) candidateMap[id] = candidateDocs[i] })
+
+      const allInterviews = interviewEntries.map(({ app, job, r }) => {
+        const c = candidateMap[app.candidate_id]
+        return {
+          candidateName: c ? [c.first_name, c.last_name].filter(Boolean).join(' ') : app.candidate_id.slice(0, 10) + '…',
+          jobId: job.id,
+          appId: app.id,
+          jobTitle: job.title,
+          score: r.score,
+          passed: r.gemini_evaluation?.passed,
+          traits: r.trait_scores,
+          feedback: r.gemini_evaluation?.feedback,
+          video_url: r.video_url,
+          date: r.completed_at,
+        }
+      })
 
       setFunnelData(funnel)
       if (ivCount > 0) {
@@ -104,7 +115,7 @@ export default function Analytics() {
     return d ? d.toLocaleDateString() : '—'
   }
 
-  if (loading) return <div className="flex items-center justify-center py-24"><Spinner size="lg" /></div>
+  if (loading) return <AnalyticsSkeleton />
 
   return (
     <div className="space-y-6">

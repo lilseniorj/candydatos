@@ -1,6 +1,6 @@
 import {
   collection, doc, addDoc, updateDoc, deleteDoc, getDocs, getDoc,
-  query, where, orderBy, serverTimestamp,
+  query, where, orderBy, serverTimestamp, limit, startAfter,
 } from 'firebase/firestore'
 import { db } from '../firebase/config'
 
@@ -55,6 +55,25 @@ export async function getApplicationsByJob(jobOfferId) {
   return snap.docs.map(d => ({ id: d.id, ...d.data() }))
 }
 
+const APPS_PAGE_SIZE = 20
+
+export async function getApplicationsByJobPaginated(jobOfferId, lastDoc = null) {
+  const constraints = [
+    where('job_offer_id', '==', jobOfferId),
+    orderBy('applied_at', 'desc'),
+    limit(APPS_PAGE_SIZE),
+  ]
+  if (lastDoc) constraints.push(startAfter(lastDoc))
+
+  const q    = query(collection(db, 'applications'), ...constraints)
+  const snap = await getDocs(q)
+  return {
+    applications: snap.docs.map(d => ({ id: d.id, ...d.data() })),
+    lastDoc:      snap.docs[snap.docs.length - 1] || null,
+    hasMore:      snap.docs.length === APPS_PAGE_SIZE,
+  }
+}
+
 export async function updateApplicationStatus(appId, status, feedback = null) {
   const payload = { status, updated_at: serverTimestamp() }
   if (feedback !== null) payload.feedback_to_candidate = feedback
@@ -94,4 +113,17 @@ export async function assignReviewer(appId, reviewerId) {
     reviewer_id: reviewerId,
     updated_at:  serverTimestamp(),
   })
+}
+
+export async function bulkUpdateStatus(appIds, status, feedback = null) {
+  const payload = { status, updated_at: serverTimestamp() }
+  if (feedback !== null) payload.feedback_to_candidate = feedback
+  await Promise.all(appIds.map(id => updateDoc(doc(db, 'applications', id), payload)))
+}
+
+export async function bulkAssignReviewer(appIds, reviewerId) {
+  await Promise.all(appIds.map(id => updateDoc(doc(db, 'applications', id), {
+    reviewer_id: reviewerId,
+    updated_at: serverTimestamp(),
+  })))
 }

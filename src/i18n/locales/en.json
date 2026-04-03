@@ -272,6 +272,51 @@
       "minutes": "min",
       "empty": "No tests yet. Create the first one.",
       "id": "Test ID"
+    },
+    "skills": {
+      "title": "Skills Matching",
+      "subtitle": "Analysis of {{count}} candidates in your talent pool",
+      "coverage": "Skills Coverage",
+      "coveragePct": "Coverage",
+      "detail": "Detail by Skill",
+      "skill": "Skill",
+      "jobsDemanding": "Jobs",
+      "candidatesHave": "Candidates",
+      "status": "Status",
+      "low": "Low",
+      "gap": "Gap",
+      "gapAlert": "Critical Skill Gaps",
+      "gapDesc": "These skills are required but less than 30% of your candidates have them. Consider adjusting requirements or posting in specialized communities.",
+      "surplus": "Untapped Talent",
+      "surplusDesc": "Skills your candidates have but you don't require in any active job posting.",
+      "noSkills": "Add required skills to your job offers to see the matching analysis."
+    },
+    "bulk": {
+      "selected": "selected",
+      "selectAll": "Select all",
+      "reject": "Reject",
+      "advance": "Advance",
+      "assignAll": "Assign reviewer",
+      "rejectTitle": "Reject {{count}} candidates",
+      "rejectDesc": "Are you sure you want to reject {{count}} selected candidates?",
+      "feedbackOptional": "Feedback (optional)",
+      "feedbackPlaceholder": "Thank you for your interest, the position has been filled with another profile.",
+      "confirmReject": "Confirm rejection",
+      "advanceTitle": "Advance {{count}} candidates",
+      "advanceDesc": "{{count}} candidates will be moved to Reviewed status.",
+      "assignTitle": "Assign reviewer to {{count}} candidates"
+    },
+    "feedbackTemplates": {
+      "profileNotAlignedLabel": "Profile not aligned",
+      "profileNotAligned": "Thank you for your interest in this position. After reviewing your profile, we have decided to move forward with candidates whose profile better aligns with the current requirements. We encourage you to apply to future openings.",
+      "positionFilledLabel": "Position filled",
+      "positionFilled": "Thank you for your interest in this opportunity. The position has been filled with another candidate. We encourage you to keep an eye on new openings that may fit your profile.",
+      "insufficientExperienceLabel": "Insufficient experience",
+      "insufficientExperience": "We appreciate your interest in the role. At this time, we are looking for a profile with more experience in the area. We invite you to continue developing your skills and apply in the future.",
+      "missingSkillsLabel": "Missing skills",
+      "missingSkills": "Thank you for applying. After evaluating your profile, we identified that some key skills required for the role are not present. We recommend strengthening these areas and reapplying.",
+      "keepInTouchLabel": "Keep in touch",
+      "keepInTouch": "Thank you for participating in our selection process. Although we will not be moving forward with your application at this time, we find your profile interesting and will keep it in mind for future opportunities."
     }
   },
   "candidate": {
@@ -444,6 +489,29 @@
       "score": "Score",
       "backToList": "Back to my applications",
       "delete": "Delete application"
+    },
+    "settings": {
+      "title": "My Account",
+      "accountInfo": "Account information",
+      "email": "Email",
+      "name": "Name",
+      "authMethod": "Authentication method",
+      "exportTitle": "Export my data",
+      "exportDesc": "Download all your information (profile, resumes, applications) in JSON format.",
+      "exportButton": "Download my data",
+      "exportSuccess": "Data exported successfully",
+      "deleteTitle": "Delete my account",
+      "deleteDesc": "Your profile, resumes, test results, and all your applications will be permanently deleted. This action cannot be undone.",
+      "deleteButton": "Delete my account",
+      "deleteConfirmTitle": "Delete your account?",
+      "deleteWarning": "This action is permanent and irreversible. All your data will be deleted.",
+      "deleteItem1": "Your profile and photo will be deleted",
+      "deleteItem2": "All your resumes and files will be removed",
+      "deleteItem3": "Your applications and test results will disappear",
+      "deleteTypeConfirm": "Type ELIMINAR to confirm",
+      "deleteConfirmButton": "Delete permanently",
+      "deleteSuccess": "Account deleted successfully",
+      "reloginRequired": "For security, you need to sign in again before deleting your account."
     }
   },
   "tests": {
@@ -500,6 +568,40 @@
     "no": "No",
     "error": "Something went wrong. Please try again.",
     "view": "View document",
-    "retrying": "Retrying..."
+    "retrying": "Retrying...",
+    "loadMore": "Load more",
+    "openMenu": "Open menu"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No notifications yet",
+    "markAllRead": "Mark all as read",
+    "justNow": "Just now",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "daysAgo": "{{count}}d ago"
+  },
+  "validation": {
+    "required": "This field is required",
+    "minLength": "Minimum {{min}} characters",
+    "emailInvalid": "Enter a valid email",
+    "passwordMin": "Minimum 6 characters"
+  },
+  "toast": {
+    "profileSaved": "Profile saved successfully",
+    "avatarUploaded": "Profile picture updated",
+    "settingsSaved": "Settings saved",
+    "logoUploaded": "Logo updated successfully",
+    "jobCreated": "Job offer created",
+    "jobSaved": "Job offer updated",
+    "resumeUploaded": "Resume uploaded successfully",
+    "resumeDeleted": "Resume deleted",
+    "applicationSubmitted": "Application submitted successfully",
+    "statusUpdated": "Status updated",
+    "feedbackSent": "Feedback sent",
+    "reviewerAssigned": "Reviewer assigned",
+    "bulkRejected": "{{count}} candidates rejected",
+    "bulkAdvanced": "{{count}} candidates advanced",
+    "bulkAssigned": "Reviewer assigned to {{count}} candidates"
   }
 }
