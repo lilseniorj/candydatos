@@ -17,7 +17,7 @@ const navItems = (t) => [
 
 export default function CandidateLayout() {
   const { t } = useTranslation()
-  const { userDoc } = useAuth()
+  const { userDoc, hasDualAccount, choosePortal } = useAuth()
   const navigate    = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -70,6 +70,13 @@ export default function CandidateLayout() {
             <p className="text-xs text-gray-500 dark:text-gray-400">{pct}% {t('candidate.profile.completion').toLowerCase()}</p>
           </div>
         </div>
+        {hasDualAccount && (
+          <button onClick={() => { choosePortal('company'); navigate('/company/dashboard') }}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors mb-1">
+            <span className="text-base">🏢</span>
+            {t('common.switchToCompany')}
+          </button>
+        )}
         <button onClick={handleLogout}
           className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

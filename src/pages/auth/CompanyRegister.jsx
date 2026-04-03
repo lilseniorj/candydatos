@@ -2,9 +2,10 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { registerCompanyUser } from '../../services/auth'
+import { registerCompanyUser, signInWithGoogleCompany } from '../../services/auth'
 import Button from '../../components/ui/Button'
 import Input from '../../components/ui/Input'
+import GoogleButton from '../../components/ui/GoogleButton'
 
 export default function CompanyRegister() {
   const { t } = useTranslation()
@@ -23,12 +24,30 @@ export default function CompanyRegister() {
     }
   }
 
+  async function handleGoogle() {
+    setApiError('')
+    try {
+      await signInWithGoogleCompany()
+      navigate('/company/setup')
+    } catch (err) {
+      setApiError(err.message || t('common.error'))
+    }
+  }
+
   return (
     <div className="w-full max-w-sm">
       <div className="text-center mb-8">
         <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-brand-100 dark:bg-brand-900/40 mb-4">🏢</div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('auth.signUp')}</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('landing.portals.company.title')}</p>
+      </div>
+
+      <GoogleButton onClick={handleGoogle} label={t('auth.googleSignUp')} />
+
+      <div className="flex items-center gap-3 my-5">
+        <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+        <span className="text-xs text-gray-400">{t('auth.or')}</span>
+        <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

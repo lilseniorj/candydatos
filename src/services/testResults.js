@@ -7,15 +7,18 @@ import { db } from '../firebase/config'
  * EI:      { self_awareness, self_regulation, motivation, empathy, social_skills }
  */
 export async function saveTestResult(applicationId, testId, geminiResult) {
-  const { score, feedback, passed, trait_scores } = geminiResult
-  await addDoc(collection(db, 'test_results'), {
+  const { score, feedback, passed, trait_scores, video_url, transcript } = geminiResult
+  const doc = {
     application_id: applicationId,
     test_id:        testId,
     score,
     trait_scores:   trait_scores ?? {},
     gemini_evaluation: { passed, score, feedback },
     completed_at:   serverTimestamp(),
-  })
+  }
+  if (video_url)  doc.video_url  = video_url
+  if (transcript) doc.transcript = transcript
+  await addDoc(collection(db, 'test_results'), doc)
 }
 
 export async function getTestResultsByApplication(applicationId) {

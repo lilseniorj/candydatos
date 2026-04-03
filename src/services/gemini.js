@@ -133,7 +133,9 @@ Return ONLY a valid JSON object with this EXACT structure:
   "education_score": number 0-100,
   "education_note": "One sentence about education fit in ${langLabel}.",
   "strengths": ["strength1", "strength2", "strength3"],
-  "improvements": ["suggestion1", "suggestion2"]
+  "improvements": ["suggestion1", "suggestion2"],
+  "location_mismatch": false,
+  "location_note": "One sentence about location compatibility in ${langLabel}. Empty if not applicable."
 }
 
 RULES:
@@ -150,7 +152,20 @@ JOB OFFER:
 Title: ${jobOffer.title}
 Description: ${jobOffer.description}
 Years of experience required: ${jobOffer.years_experience_required}
-Required skills (from description): infer from description above
+Country: ${jobOffer.country || 'Not specified'}
+Work modality: ${jobOffer.work_modality || 'Not specified'}
+Allowed cities: ${(jobOffer.allowed_cities || []).join(', ') || 'Any'}
+Accepts remote from other cities: ${jobOffer.accept_remote_other_cities ? 'Yes' : 'No'}
+Minimum education level: ${jobOffer.min_education || 'Not specified'}
+Required certifications: ${(jobOffer.required_certifications || []).join(', ') || 'None'}
+Required languages: ${(jobOffer.required_languages || []).join(', ') || 'Not specified'}
+Required skills: ${(jobOffer.required_skills || []).join(', ') || 'Infer from description'}
+
+LOCATION EVALUATION RULES:
+- If allowed_cities is specified AND the candidate's city is NOT in the list:
+  * If work modality is Remote AND accept_remote_other_cities is Yes → minor penalty (10-15 points)
+  * If work modality is On-site or Hybrid AND accept_remote_other_cities is No → major penalty (40-60 points), mark as location_mismatch: true
+- If allowed_cities is empty or "Any", location is not a factor
 
 Return ONLY valid JSON.
 `)

@@ -18,12 +18,89 @@ import Spinner from '../../components/ui/Spinner'
 const STEPS    = ['cv_selection', 'fit_check', 'test', 'submitted']
 const STEP_IDX = { cv_selection: 0, fit_check: 1, test: 2, submitted: 3 }
 
+// ─── Fit Check Loader ────────────────────────────────────────────────────────
+function FitCheckLoader({ t, resumeName }) {
+  const [step, setStep] = useState(0)
+
+  const steps = [
+    { label: t('candidate.apply.loader.reading'), icon: '📄' },
+    { label: t('candidate.apply.loader.analyzing'), icon: '🔍' },
+    { label: t('candidate.apply.loader.comparing'), icon: '⚡' },
+    { label: t('candidate.apply.loader.generating'), icon: '🧠' },
+  ]
+
+  useEffect(() => {
+    const timers = steps.map((_, i) =>
+      setTimeout(() => setStep(i), i * 2000)
+    )
+    return () => timers.forEach(clearTimeout)
+  }, [])
+
+  return (
+    <Card className="p-6">
+      <div className="text-center py-6">
+        {/* Animated brain icon */}
+        <div className="relative w-24 h-24 mx-auto mb-6">
+          <svg className="w-24 h-24" viewBox="0 0 96 96" fill="none">
+            <circle cx="48" cy="48" r="44" stroke="currentColor" strokeWidth="3"
+              className="text-gray-200 dark:text-gray-700" />
+            <circle cx="48" cy="48" r="44" stroke="currentColor" strokeWidth="3" strokeLinecap="round"
+              className="text-brand-500"
+              strokeDasharray="276.5"
+              strokeDashoffset={276.5 - ((step + 1) / steps.length) * 276.5}
+              transform="rotate(-90 48 48)"
+              style={{ transition: 'stroke-dashoffset 1.5s ease' }} />
+          </svg>
+          <span className="absolute inset-0 flex items-center justify-center text-3xl">
+            {steps[step]?.icon}
+          </span>
+        </div>
+
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
+          {t('candidate.apply.loader.title')}
+        </h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+          {t('candidate.apply.loader.subtitle')}
+        </p>
+
+        {/* Progress steps */}
+        <div className="max-w-xs mx-auto space-y-3 text-left">
+          {steps.map((s, i) => (
+            <div key={i} className="flex items-center gap-3">
+              {i < step ? (
+                <span className="text-green-500 text-sm font-bold shrink-0">✓</span>
+              ) : i === step ? (
+                <span className="shrink-0 w-4 h-4 flex items-center justify-center">
+                  <span className="w-3 h-3 rounded-full bg-brand-500 animate-pulse" />
+                </span>
+              ) : (
+                <span className="shrink-0 w-4 h-4 flex items-center justify-center">
+                  <span className="w-2 h-2 rounded-full bg-gray-300 dark:bg-gray-600" />
+                </span>
+              )}
+              <span className={`text-sm ${
+                i < step ? 'text-green-600 dark:text-green-400'
+                : i === step ? 'text-gray-900 dark:text-white font-medium'
+                : 'text-gray-400 dark:text-gray-500'
+              }`}>{s.label}</span>
+            </div>
+          ))}
+        </div>
+
+        <p className="text-xs text-gray-400 dark:text-gray-500 mt-6">
+          {resumeName}
+        </p>
+      </div>
+    </Card>
+  )
+}
+
 // ─── Component ───────────────────────────────────────────────────────────────
 export default function ApplyFlow() {
   const { t, i18n } = useTranslation()
   const { jobId }    = useParams()
   const navigate     = useNavigate()
-  const { firebaseUser } = useAuth()
+  const { firebaseUser, userDoc } = useAuth()
 
   const [job, setJob]                           = useState(null)
   const [app, setApp]                           = useState(null)
@@ -165,18 +242,22 @@ export default function ApplyFlow() {
       {currentStep === 'fit_check' && (
         <>
           {!fitResult ? (
-            <Card className="p-6">
-              <h2 className="font-semibold text-gray-900 dark:text-white mb-4">{t('candidate.apply.step2')}</h2>
-              <div className="text-center py-8">
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-                  {t('candidate.apply.selectResume')}: <strong>{selectedResume?.name}</strong>
-                </p>
-                <div className="flex gap-2 justify-center">
-                  <Button variant="ghost" onClick={handleGoBack}>{t('candidate.apply.changeResume')}</Button>
-                  <Button onClick={handleFitCheck} loading={processing}>{t('candidate.apply.continue')}</Button>
+            processing ? (
+              <FitCheckLoader t={t} resumeName={selectedResume?.name} />
+            ) : (
+              <Card className="p-6">
+                <h2 className="font-semibold text-gray-900 dark:text-white mb-4">{t('candidate.apply.step2')}</h2>
+                <div className="text-center py-8">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                    {t('candidate.apply.selectResume')}: <strong>{selectedResume?.name}</strong>
+                  </p>
+                  <div className="flex gap-2 justify-center">
+                    <Button variant="ghost" onClick={handleGoBack}>{t('candidate.apply.changeResume')}</Button>
+                    <Button onClick={handleFitCheck} loading={processing}>{t('candidate.apply.continue')}</Button>
+                  </div>
                 </div>
-              </div>
-            </Card>
+              </Card>
+            )
           ) : (
             <div className="space-y-4">
               {/* ── Score Hero Card ──────────────────────────────────────── */}
@@ -318,17 +399,44 @@ export default function ApplyFlow() {
                 )}
               </div>
 
+              {/* ── Location warning ───────────────────────────────────── */}
+              {fitResult.location_mismatch && fitResult.location_note && (
+                <Card className="p-4 border-l-4 border-l-yellow-400 bg-yellow-50 dark:bg-yellow-900/10">
+                  <div className="flex items-start gap-2">
+                    <span className="text-lg shrink-0">📍</span>
+                    <div>
+                      <p className="text-xs font-semibold text-yellow-700 dark:text-yellow-300 mb-0.5">{t('candidate.apply.locationWarning')}</p>
+                      <p className="text-xs text-yellow-600 dark:text-yellow-400">{fitResult.location_note}</p>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
               {/* ── Action Buttons ───────────────────────────────────────── */}
-              <div className="flex gap-2">
-                <Button variant="ghost" className="flex-1" onClick={handleGoBack} disabled={processing}>
-                  {t('candidate.apply.changeResume')}
-                </Button>
-                {fitResult.passed && (
+              {fitResult.passed ? (
+                <div className="flex gap-2">
+                  <Button variant="ghost" className="flex-1" onClick={handleGoBack} disabled={processing}>
+                    {t('candidate.apply.changeResume')}
+                  </Button>
                   <Button className="flex-1" onClick={handleStartInterview} loading={processing}>
                     🎥 {t('candidate.interview.start')}
                   </Button>
-                )}
-              </div>
+                </div>
+              ) : (
+                <Card className="p-6 text-center border-2 border-dashed border-gray-300 dark:border-gray-600">
+                  <div className="text-4xl mb-3">💡</div>
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-1">{t('candidate.apply.fitFailedTitle')}</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-5 max-w-sm mx-auto">{t('candidate.apply.fitFailedDesc')}</p>
+                  <div className="flex flex-col sm:flex-row gap-2 max-w-xs mx-auto">
+                    <Button variant="secondary" className="flex-1" onClick={handleGoBack}>
+                      📄 {t('candidate.apply.tryAnotherResume')}
+                    </Button>
+                    <Button variant="ghost" className="flex-1" onClick={() => navigate('/candidate/jobs')}>
+                      🔍 {t('candidate.apply.exploreJobs')}
+                    </Button>
+                  </div>
+                </Card>
+              )}
             </div>
           )}
         </>
@@ -341,6 +449,8 @@ export default function ApplyFlow() {
             job={job}
             resumeData={selectedResume?.extracted_data || {}}
             fitScore={fitResult?.score || 0}
+            candidateName={[userDoc?.first_name, userDoc?.last_name].filter(Boolean).join(' ')}
+            applicationId={app?.id}
             onComplete={handleInterviewComplete}
           />
           {testError && <p className="text-sm text-red-500 text-center mt-2">{testError}</p>}

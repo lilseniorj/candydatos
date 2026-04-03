@@ -3,6 +3,7 @@ import {
   collection, addDoc, query, where, getDocs, orderBy,
 } from 'firebase/firestore'
 import { db } from '../firebase/config'
+import { sendInvitationEmail } from './notifications'
 
 export async function createCompany(uid, data) {
   const ref = doc(collection(db, 'companies'))
@@ -20,7 +21,7 @@ export async function updateCompany(companyId, data) {
   await updateDoc(doc(db, 'companies', companyId), data)
 }
 
-export async function sendInvitation(companyId, invitedBy, email, role) {
+export async function sendInvitation(companyId, invitedBy, email, role, { companyName, invitedByName } = {}) {
   await addDoc(collection(db, 'company_invitations'), {
     company_id: companyId,
     invited_by: invitedBy,
@@ -30,6 +31,10 @@ export async function sendInvitation(companyId, invitedBy, email, role) {
     expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     created_at: serverTimestamp(),
   })
+
+  if (companyName) {
+    await sendInvitationEmail({ email, companyName, role, invitedByName: invitedByName || 'Tu equipo' })
+  }
 }
 
 export async function getPendingInvitations(email) {
@@ -43,9 +48,9 @@ export async function getPendingInvitations(email) {
 }
 
 export async function getCompanyUsers(companyId) {
-  const q    = query(collection(db, 'company_users'), where('company_id', '==', companyId), orderBy('full_name'))
+  const q    = query(collection(db, 'company_users'), where('company_id', '==', companyId))
   const snap = await getDocs(q)
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+  return snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (a.full_name || '').localeCompare(b.full_name || ''))
 }
 
 export async function acceptInvitation(invitationId, uid, companyId, role) {

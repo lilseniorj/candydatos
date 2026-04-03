@@ -61,7 +61,20 @@
         "register": "Registrarse como Candidato"
       }
     },
+    "cta": {
+      "title": "Comienza hoy",
+      "subtitle": "Únete a la plataforma de reclutamiento impulsada por IA. Es gratis para comenzar.",
+      "already": "¿Ya tienes cuenta?"
+    },
     "footer": "© 2025 candydatos.com — Todos los derechos reservados."
+  },
+  "public": {
+    "job": {
+      "loginTitle": "Inicia sesión para aplicar",
+      "loginSubtitle": "Accede a todos los detalles de la oferta y aplica en pocos clics",
+      "loginToSeeMore": "Inicia sesión para ver la información completa",
+      "loginFooter": "Al continuar aceptas los términos de uso de candydatos"
+    }
   },
   "auth": {
     "email": "Correo electrónico",
@@ -69,10 +82,22 @@
     "confirmPassword": "Confirmar contraseña",
     "fullName": "Nombre completo",
     "signIn": "Iniciar sesión",
+    "selectRole": "Selecciona cómo quieres ingresar",
+    "company": "Empresa",
+    "candidate": "Candidato",
+    "choosePortal": "¿Cómo quieres ingresar?",
+    "choosePortalDesc": "Tu cuenta {{email}} tiene acceso a ambos portales. Elige uno para continuar.",
+    "enterAsCompany": "Ingresar como Empresa",
+    "enterAsCompanyDesc": "Gestiona ofertas, candidatos y reclutamiento",
+    "enterAsCandidate": "Ingresar como Candidato",
+    "enterAsCandidateDesc": "Busca ofertas y gestiona tus aplicaciones",
     "signUp": "Crear cuenta",
     "noAccount": "¿No tienes cuenta?",
     "haveAccount": "¿Ya tienes cuenta?",
     "forgotPassword": "¿Olvidaste tu contraseña?",
+    "or": "o",
+    "googleSignIn": "Continuar con Google",
+    "googleSignUp": "Registrarse con Google",
     "errors": {
       "emailRequired": "El correo es requerido",
       "emailInvalid": "Ingresa un correo válido",
@@ -117,7 +142,8 @@
       "empty": "Aún no hay ofertas. ¡Crea la primera!",
       "search": "Buscar oferta por cargo o país...",
       "noResults": "No se encontraron ofertas con esa búsqueda",
-      "editJob": "Editar oferta laboral"
+      "editJob": "Editar oferta laboral",
+      "shareTitle": "Mira esta oferta en candydatos"
     },
     "jobForm": {
       "titleField": "Título del cargo",
@@ -135,7 +161,14 @@
       "save": "Guardar oferta",
       "remote": "Remoto",
       "onsite": "Presencial",
-      "hybrid": "Híbrido"
+      "hybrid": "Híbrido",
+      "requirements": "Requisitos específicos",
+      "allowedCities": "Ciudades permitidas",
+      "acceptRemote": "Acepta remoto de otras ciudades",
+      "minEducation": "Educación mínima",
+      "requiredCerts": "Certificaciones requeridas",
+      "requiredLangs": "Idiomas requeridos",
+      "requiredSkills": "Habilidades obligatorias"
     },
     "applicants": {
       "title": "Candidatos",
@@ -163,7 +196,12 @@
       "hired": "Contratado",
       "rejected": "Rechazado",
       "advanceTo": "Avanzar a",
-      "reject": "Rechazar candidato"
+      "reject": "Rechazar candidato",
+      "rejectTitle": "Rechazar candidato",
+      "rejectDesc": "Escribe el motivo del rechazo. Este mensaje será visible para el candidato en su aplicación.",
+      "rejectReason": "Motivo del rechazo",
+      "rejectPlaceholder": "Ej: Buscamos un perfil con más experiencia en...",
+      "confirmReject": "Confirmar rechazo"
     },
     "applicantDetail": {
       "personalInfo": "Información personal",
@@ -180,7 +218,9 @@
       "testResults": "Resultados del test",
       "history": "Historial de etapas",
       "notes": "Notas internas del equipo",
-      "notesPlaceholder": "Escribe notas internas sobre este candidato..."
+      "notesPlaceholder": "Escribe una nota...",
+      "addNote": "Agregar nota",
+      "interviewRecording": "Grabación de la entrevista"
     },
     "analytics": {
       "title": "Analytics",
@@ -188,7 +228,18 @@
       "bigFive": "Big Five (OCEAN)",
       "bigFiveDesc": "Promedio de rasgos de personalidad de todos los candidatos evaluados.",
       "ei": "Inteligencia Emocional",
-      "eiDesc": "Promedio de dimensiones de IE de todos los candidatos evaluados."
+      "eiDesc": "Promedio de dimensiones de IE de todos los candidatos evaluados.",
+      "interviewScores": "Scores de Entrevistas IA",
+      "interviewScoresDesc": "Promedio de puntuación por categoría de todas las entrevistas realizadas con IA.",
+      "interviewResults": "Resultados de Entrevistas",
+      "totalResults": "resultados",
+      "searchCandidate": "Buscar candidato...",
+      "allJobs": "Todas las ofertas",
+      "sortScore": "Mayor score",
+      "sortDate": "Más reciente",
+      "noResults": "No se encontraron resultados con estos filtros",
+      "loadMore": "Cargar más",
+      "remaining": "restantes"
     },
     "invite": {
       "title": "Invitar usuario",
@@ -300,11 +351,20 @@
       "benefits": "Beneficios",
       "aboutCompany": "Acerca de la empresa",
       "moreFrom": "Más ofertas de",
-      "selectJob": "Selecciona una oferta para ver los detalles"
+      "selectJob": "Selecciona una oferta para ver los detalles",
+      "notFound": "Esta oferta no existe o ya no está disponible"
     },
     "apply": {
       "step1": "Seleccionar HV",
       "step2": "Validación",
+      "loader": {
+        "title": "Analizando tu perfil",
+        "subtitle": "Nuestra IA está evaluando tu compatibilidad con la oferta",
+        "reading": "Leyendo tu hoja de vida...",
+        "analyzing": "Analizando experiencia y habilidades...",
+        "comparing": "Comparando con los requisitos de la oferta...",
+        "generating": "Generando resultado de compatibilidad..."
+      },
       "step3": "Test",
       "step4": "Enviada",
       "selectResume": "Elige una hoja de vida para esta aplicación",
@@ -318,6 +378,7 @@
       "fitSkillsMatch": "Habilidades detectadas",
       "fitStrengths": "Fortalezas",
       "fitImprovements": "Áreas de mejora",
+      "locationWarning": "Ubicación no coincide",
       "startTest": "Iniciar test",
       "generatingTest": "Generando preguntas personalizadas con IA...",
       "testReady": "Tu test está listo. Pulsa el botón para comenzar.",
@@ -326,7 +387,13 @@
       "submitTest": "Enviar respuestas",
       "successTitle": "¡Aplicación enviada!",
       "successDesc": "Te notificaremos sobre cualquier novedad.",
-      "interviewStep": "Entrevista IA"
+      "interviewStep": "Entrevista IA",
+      "changeResume": "Cambiar hoja de vida",
+      "backToJobs": "Volver a las ofertas",
+      "fitFailedTitle": "No cumples los requisitos para esta oferta",
+      "fitFailedDesc": "Puedes intentar con otra hoja de vida o explorar otras ofertas que se ajusten mejor a tu perfil.",
+      "tryAnotherResume": "Intentar con otra HV",
+      "exploreJobs": "Explorar otras ofertas"
     },
     "interview": {
       "title": "Entrevista con IA",
@@ -334,17 +401,34 @@
       "start": "Iniciar entrevista",
       "micRequired": "Micrófono requerido",
       "camRequired": "Cámara requerida",
-      "requestingAccess": "Solicitando acceso a cámara y micrófono...",
-      "connecting": "Conectando con el entrevistador IA...",
+      "requestingAccess": "Preparando tu entrevista",
+      "allowBrowser": "Acepta los permisos de cámara y micrófono en tu navegador",
+      "connecting": "Conectando con tu entrevistadora",
+      "connectingHint": "Preparando la sesión, esto tomará unos segundos...",
       "aiSpeaking": "IA hablando...",
       "yourTurn": "Tu turno",
       "recording": "Grabando",
-      "ending": "Finalizando entrevista...",
-      "processing": "Procesando resultados con IA...",
+      "ending": "Finalizando entrevista",
+      "savingVideo": "Guardando la grabación de tu entrevista...",
+      "analyzing": "Analizando tu entrevista",
+      "analyzingHint": "Nuestra IA está evaluando tus respuestas, expresiones y habilidades comunicativas",
+      "stepRecording": "Entrevista finalizada",
+      "stepUpload": "Video guardado",
+      "stepEval": "Evaluando respuestas y expresiones...",
+      "processing": "Procesando...",
       "permissionError": "No se pudo acceder a la cámara o micrófono. Verifica los permisos del navegador.",
       "genericError": "Ocurrió un error durante la entrevista.",
       "evalError": "No se pudieron procesar los resultados de la entrevista.",
-      "retry": "Intentar de nuevo"
+      "retry": "Intentar de nuevo",
+      "checkDevices": "Verificar cámara y micrófono",
+      "deviceCheck": "Verificación de dispositivos",
+      "camera": "Cámara",
+      "microphone": "Micrófono",
+      "working": "Funcionando",
+      "notDetected": "No detectado",
+      "devicesReady": "Cámara y micrófono listos. ¡Puedes iniciar la entrevista!",
+      "selectLang": "Idioma de la entrevista",
+      "langLabel": "Idioma seleccionado"
     },
     "applications": {
       "title": "Mis Aplicaciones",
@@ -358,7 +442,8 @@
       "feedback": "Comentario del reclutador",
       "resume": "Hoja de vida",
       "score": "Puntaje",
-      "backToList": "Volver a mis aplicaciones"
+      "backToList": "Volver a mis aplicaciones",
+      "delete": "Eliminar aplicación"
     }
   },
   "tests": {
@@ -397,6 +482,8 @@
     "edit": "Editar",
     "close": "Cerrar",
     "back": "Atrás",
+    "share": "Compartir",
+    "copied": "Copiado",
     "next": "Siguiente",
     "confirm": "Confirmar",
     "search": "Buscar",
@@ -405,8 +492,12 @@
     "lightMode": "Modo claro",
     "language": "Idioma",
     "logout": "Cerrar sesión",
+    "switchToCandidate": "Cambiar a Candidato",
+    "switchToCompany": "Cambiar a Empresa",
     "settings": "Configuración",
     "noData": "Sin datos disponibles",
+    "yes": "Sí",
+    "no": "No",
     "error": "Algo salió mal. Intenta de nuevo.",
     "view": "Ver documento",
     "retrying": "Reintentando..."

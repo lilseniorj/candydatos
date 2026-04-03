@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../context/AuthContext'
-import { getApplicationsByCandidate } from '../../services/applications'
+import { getApplicationsByCandidate, deleteApplication } from '../../services/applications'
 import { getJob } from '../../services/jobs'
 import { getCompany } from '../../services/companies'
 import Card from '../../components/ui/Card'
@@ -106,6 +106,12 @@ export default function MyApplications() {
     return d ? d.toLocaleDateString() : '—'
   }
 
+  async function handleDeleteApp(appId) {
+    await deleteApplication(appId)
+    setApplications(prev => prev.filter(a => a.id !== appId))
+    if (selectedId === appId) setSelectedId(null)
+  }
+
   function getStageName(app) {
     const stage = app.pipeline_stage || 'received'
     return stage === REJECTED ? t('company.pipeline.rejected') : t(`company.pipeline.${stage}`)
@@ -173,6 +179,15 @@ export default function MyApplications() {
                           <span className="absolute text-[10px] font-bold text-gray-700 dark:text-gray-300">{app.fit_check.score}</span>
                         </div>
                       </div>
+                    )}
+
+                    {/* Delete button for rejected apps */}
+                    {isRejected && (
+                      <button onClick={(e) => { e.stopPropagation(); handleDeleteApp(app.id) }}
+                        className="shrink-0 p-1.5 rounded-lg text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 transition-colors"
+                        title={t('candidate.applications.delete')}>
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      </button>
                     )}
                   </div>
                 </Card>

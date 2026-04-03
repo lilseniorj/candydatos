@@ -61,7 +61,20 @@
         "register": "Register as Candidate"
       }
     },
+    "cta": {
+      "title": "Get started today",
+      "subtitle": "Join the AI-powered recruitment platform. Free to get started.",
+      "already": "Already have an account?"
+    },
     "footer": "© 2025 candydatos.com — All rights reserved."
+  },
+  "public": {
+    "job": {
+      "loginTitle": "Sign in to apply",
+      "loginSubtitle": "Access full job details and apply in a few clicks",
+      "loginToSeeMore": "Sign in to see the full details",
+      "loginFooter": "By continuing you agree to candydatos terms of use"
+    }
   },
   "auth": {
     "email": "Email",
@@ -69,10 +82,22 @@
     "confirmPassword": "Confirm password",
     "fullName": "Full name",
     "signIn": "Sign In",
+    "selectRole": "Select how you want to sign in",
+    "company": "Company",
+    "candidate": "Candidate",
+    "choosePortal": "How do you want to sign in?",
+    "choosePortalDesc": "Your account {{email}} has access to both portals. Choose one to continue.",
+    "enterAsCompany": "Enter as Company",
+    "enterAsCompanyDesc": "Manage job posts, applicants and recruitment",
+    "enterAsCandidate": "Enter as Candidate",
+    "enterAsCandidateDesc": "Browse jobs and manage your applications",
     "signUp": "Create account",
     "noAccount": "Don't have an account?",
     "haveAccount": "Already have an account?",
     "forgotPassword": "Forgot password?",
+    "or": "or",
+    "googleSignIn": "Continue with Google",
+    "googleSignUp": "Sign up with Google",
     "errors": {
       "emailRequired": "Email is required",
       "emailInvalid": "Enter a valid email",
@@ -117,7 +142,8 @@
       "empty": "No job offers yet. Create the first one!",
       "search": "Search by title or country...",
       "noResults": "No jobs match your search",
-      "editJob": "Edit job offer"
+      "editJob": "Edit job offer",
+      "shareTitle": "Check out this job on candydatos"
     },
     "jobForm": {
       "titleField": "Job title",
@@ -135,7 +161,14 @@
       "save": "Save offer",
       "remote": "Remote",
       "onsite": "On-site",
-      "hybrid": "Hybrid"
+      "hybrid": "Hybrid",
+      "requirements": "Specific requirements",
+      "allowedCities": "Allowed cities",
+      "acceptRemote": "Accept remote from other cities",
+      "minEducation": "Minimum education",
+      "requiredCerts": "Required certifications",
+      "requiredLangs": "Required languages",
+      "requiredSkills": "Required skills"
     },
     "applicants": {
       "title": "Applicants",
@@ -163,7 +196,12 @@
       "hired": "Hired",
       "rejected": "Rejected",
       "advanceTo": "Advance to",
-      "reject": "Reject candidate"
+      "reject": "Reject candidate",
+      "rejectTitle": "Reject candidate",
+      "rejectDesc": "Write the reason for rejection. This message will be visible to the candidate in their application.",
+      "rejectReason": "Rejection reason",
+      "rejectPlaceholder": "E.g.: We're looking for a profile with more experience in...",
+      "confirmReject": "Confirm rejection"
     },
     "applicantDetail": {
       "personalInfo": "Personal information",
@@ -180,7 +218,9 @@
       "testResults": "Test results",
       "history": "Stage history",
       "notes": "Internal team notes",
-      "notesPlaceholder": "Write internal notes about this candidate..."
+      "notesPlaceholder": "Write a note...",
+      "addNote": "Add note",
+      "interviewRecording": "Interview recording"
     },
     "analytics": {
       "title": "Analytics",
@@ -188,7 +228,18 @@
       "bigFive": "Big Five (OCEAN)",
       "bigFiveDesc": "Average personality trait scores across all evaluated candidates.",
       "ei": "Emotional Intelligence",
-      "eiDesc": "Average EI dimension scores across all evaluated candidates."
+      "eiDesc": "Average EI dimension scores across all evaluated candidates.",
+      "interviewScores": "AI Interview Scores",
+      "interviewScoresDesc": "Average score per category across all AI interviews conducted.",
+      "interviewResults": "Interview Results",
+      "totalResults": "results",
+      "searchCandidate": "Search candidate...",
+      "allJobs": "All jobs",
+      "sortScore": "Highest score",
+      "sortDate": "Most recent",
+      "noResults": "No results match these filters",
+      "loadMore": "Load more",
+      "remaining": "remaining"
     },
     "invite": {
       "title": "Invite user",
@@ -300,11 +351,20 @@
       "benefits": "Benefits",
       "aboutCompany": "About the company",
       "moreFrom": "More jobs from",
-      "selectJob": "Select a job to see the details"
+      "selectJob": "Select a job to see the details",
+      "notFound": "This job doesn't exist or is no longer available"
     },
     "apply": {
       "step1": "Select resume",
       "step2": "Fit check",
+      "loader": {
+        "title": "Analyzing your profile",
+        "subtitle": "Our AI is evaluating your fit with the job offer",
+        "reading": "Reading your resume...",
+        "analyzing": "Analyzing experience and skills...",
+        "comparing": "Comparing with job requirements...",
+        "generating": "Generating compatibility result..."
+      },
       "step3": "Test",
       "step4": "Submitted",
       "selectResume": "Choose a resume for this application",
@@ -318,6 +378,7 @@
       "fitSkillsMatch": "Skills detected",
       "fitStrengths": "Strengths",
       "fitImprovements": "Areas to improve",
+      "locationWarning": "Location mismatch",
       "startTest": "Start test",
       "generatingTest": "Generating personalized questions with AI...",
       "testReady": "Your test is ready. Press the button to begin.",
@@ -326,7 +387,13 @@
       "submitTest": "Submit answers",
       "successTitle": "Application submitted!",
       "successDesc": "We will notify you of any updates.",
-      "interviewStep": "AI Interview"
+      "interviewStep": "AI Interview",
+      "changeResume": "Change resume",
+      "backToJobs": "Back to jobs",
+      "fitFailedTitle": "You don't meet the requirements for this position",
+      "fitFailedDesc": "You can try with a different resume or explore other jobs that better match your profile.",
+      "tryAnotherResume": "Try another resume",
+      "exploreJobs": "Explore other jobs"
     },
     "interview": {
       "title": "AI Interview",
@@ -334,17 +401,34 @@
       "start": "Start interview",
       "micRequired": "Microphone required",
       "camRequired": "Camera required",
-      "requestingAccess": "Requesting camera and microphone access...",
-      "connecting": "Connecting to AI interviewer...",
+      "requestingAccess": "Preparing your interview",
+      "allowBrowser": "Allow camera and microphone permissions in your browser",
+      "connecting": "Connecting to your interviewer",
+      "connectingHint": "Setting up the session, this will take a few seconds...",
       "aiSpeaking": "AI speaking...",
       "yourTurn": "Your turn",
       "recording": "Recording",
-      "ending": "Ending interview...",
-      "processing": "Processing results with AI...",
+      "ending": "Wrapping up your interview",
+      "savingVideo": "Saving your interview recording...",
+      "analyzing": "Analyzing your interview",
+      "analyzingHint": "Our AI is evaluating your responses, expressions, and communication skills",
+      "stepRecording": "Interview completed",
+      "stepUpload": "Video saved",
+      "stepEval": "Evaluating responses and expressions...",
+      "processing": "Processing...",
       "permissionError": "Could not access camera or microphone. Check your browser permissions.",
       "genericError": "An error occurred during the interview.",
       "evalError": "Could not process interview results.",
-      "retry": "Try again"
+      "retry": "Try again",
+      "checkDevices": "Check camera and microphone",
+      "deviceCheck": "Device check",
+      "camera": "Camera",
+      "microphone": "Microphone",
+      "working": "Working",
+      "notDetected": "Not detected",
+      "devicesReady": "Camera and microphone ready. You can start the interview!",
+      "selectLang": "Interview language",
+      "langLabel": "Selected language"
     },
     "applications": {
       "title": "My Applications",
@@ -358,7 +442,8 @@
       "feedback": "Recruiter feedback",
       "resume": "Resume",
       "score": "Score",
-      "backToList": "Back to my applications"
+      "backToList": "Back to my applications",
+      "delete": "Delete application"
     }
   },
   "tests": {
@@ -397,6 +482,8 @@
     "edit": "Edit",
     "close": "Close",
     "back": "Back",
+    "share": "Share",
+    "copied": "Copied",
     "next": "Next",
     "confirm": "Confirm",
     "search": "Search",
@@ -405,8 +492,12 @@
     "lightMode": "Light mode",
     "language": "Language",
     "logout": "Sign out",
+    "switchToCandidate": "Switch to Candidate",
+    "switchToCompany": "Switch to Company",
     "settings": "Settings",
     "noData": "No data available",
+    "yes": "Yes",
+    "no": "No",
     "error": "Something went wrong. Please try again.",
     "view": "View document",
     "retrying": "Retrying..."

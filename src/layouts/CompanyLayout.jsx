@@ -18,7 +18,7 @@ const navItems = (t) => [
 export default function CompanyLayout() {
   const { t } = useTranslation()
   const { company } = useCompany()
-  const { userDoc }  = useAuth()
+  const { userDoc, hasDualAccount, choosePortal } = useAuth()
   const navigate     = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -37,11 +37,10 @@ export default function CompanyLayout() {
   const Sidebar = () => (
     <nav className="flex flex-col h-full">
       <div className="px-4 py-5 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center gap-2 mb-1">
+        <div className="flex items-center gap-2">
           <img src={logo} alt="candydatos" className="h-7 w-auto" />
           <span className="font-bold text-gray-900 dark:text-white">candydatos</span>
         </div>
-        {company && <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{company.commercial_name}</p>}
       </div>
       <div className="flex-1 p-3 space-y-1 overflow-y-auto scrollbar-thin">
         {navItems(t).map(item => (
@@ -64,6 +63,13 @@ export default function CompanyLayout() {
             <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{userDoc?.role}</p>
           </div>
         </div>
+        {hasDualAccount && (
+          <button onClick={() => { choosePortal('candidate'); navigate('/candidate/profile') }}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors mb-1">
+            <span className="text-base">👤</span>
+            {t('common.switchToCandidate')}
+          </button>
+        )}
         <button onClick={handleLogout}
           className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -1,26 +1,34 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { loginUser } from '../../services/auth'
-import Button from '../../components/ui/Button'
-import Input from '../../components/ui/Input'
+import { signInWithGoogleCompany } from '../../services/auth'
+import { useAuth } from '../../context/AuthContext'
+import GoogleButton from '../../components/ui/GoogleButton'
+import Spinner from '../../components/ui/Spinner'
 
 export default function CompanyLogin() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const [apiError, setApiError] = useState('')
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm()
+  const { refreshUserDoc } = useAuth()
+  const [error, setError]     = useState('')
+  const [loading, setLoading] = useState(false)
 
-  async function onSubmit({ email, password }) {
-    setApiError('')
+  async function handleGoogle() {
+    setError('')
+    setLoading(true)
     try {
-      await loginUser(email, password)
-      navigate('/company/dashboard')
+      await signInWithGoogleCompany()
+      await refreshUserDoc()
+      // Small delay to let AuthContext pick up the new userDoc
+      await new Promise(r => setTimeout(r, 500))
+      navigate('/company/dashboard', { replace: true })
     } catch (err) {
-      setApiError(err.message || t('common.error'))
+      setError(err.message || t('common.error'))
+      setLoading(false)
     }
   }
+
+  if (loading) return <div className="flex items-center justify-center min-h-screen"><Spinner size="lg" /></div>
 
   return (
     <div className="w-full max-w-sm">
@@ -30,16 +38,9 @@ export default function CompanyLogin() {
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('landing.portals.company.title')}</p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <Input label={t('auth.email')} type="email" placeholder="empresa@correo.com"
-          error={errors.email?.message}
-          {...register('email', { required: t('auth.errors.emailRequired'), pattern: { value: /\S+@\S+\.\S+/, message: t('auth.errors.emailInvalid') } })} />
-        <Input label={t('auth.password')} type="password"
-          error={errors.password?.message}
-          {...register('password', { required: t('auth.errors.passwordRequired'), minLength: { value: 6, message: t('auth.errors.passwordMin') } })} />
-        {apiError && <p className="text-sm text-red-500 text-center">{apiError}</p>}
-        <Button type="submit" className="w-full" loading={isSubmitting}>{t('auth.signIn')}</Button>
-      </form>
+      <GoogleButton onClick={handleGoogle} label={t('auth.googleSignIn')} />
+
+      {error && <p className="text-sm text-red-500 text-center mt-4">{error}</p>}
 
       <p className="text-sm text-center text-gray-500 dark:text-gray-400 mt-6">
         {t('auth.noAccount')}{' '}

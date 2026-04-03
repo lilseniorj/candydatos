@@ -255,12 +255,6 @@ export default function ApplicantList() {
                       <Button size="sm" variant="ghost" onClick={() => { setAssignModal(app); setSelectedReviewer(app.reviewer_id || '') }}>
                         👤
                       </Button>
-                      {['Pending', 'Reviewed', 'Testing'].includes(app.status) && (
-                        <>
-                          <Button size="sm" onClick={() => handleStatus(app.id, 'Hired')}>{t('company.applicants.accept')}</Button>
-                          <Button size="sm" variant="danger" onClick={() => handleStatus(app.id, 'Rejected')}>{t('company.applicants.reject')}</Button>
-                        </>
-                      )}
                       <Button size="sm" variant="ghost"
                         onClick={() => { setFeedbackModal(app); setFeedbackText(app.feedback_to_candidate || '') }}>
                         💬

@@ -53,6 +53,15 @@ body {
   background: rgba(128, 128, 128, 0.5);
 }
 
+/* ─── Animations ──────────────────────────────────────────────────────────── */
+@keyframes slide-up {
+  from { transform: translateY(40px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
 /* Hide scrollbar completely but keep scrolling */
 .scrollbar-none {
   scrollbar-width: none;

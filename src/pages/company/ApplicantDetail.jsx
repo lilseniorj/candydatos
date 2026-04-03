@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { getApplication, updateApplicationPipeline, updateApplicationNotes, updateApplicationStatus } from '../../services/applications'
+import { getApplication, updateApplicationPipeline, addApplicationNote, updateApplicationStatus } from '../../services/applications'
 import { getCandidate } from '../../services/candidates'
+import { useCompany } from '../../context/CompanyContext'
+import { useAuth } from '../../context/AuthContext'
+import { sendRejectionEmail, sendPipelineEmail } from '../../services/notifications'
 import { getJob } from '../../services/jobs'
 import { getResumesByCandidate } from '../../services/resumes'
 import { getTestResultsByApplication } from '../../services/testResults'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
+import Modal from '../../components/ui/Modal'
 import Badge from '../../components/ui/Badge'
 import Spinner from '../../components/ui/Spinner'
 
@@ -78,10 +82,30 @@ function Pipeline({ current, isRejected, history, t }) {
   )
 }
 
+// ─── Country phone prefixes ─────────────────────────────────────────────────
+const COUNTRY_CODES = {
+  Colombia: '57', Argentina: '54', Mexico: '52', Chile: '56', Peru: '51',
+  Ecuador: '593', Venezuela: '58', Brasil: '55', Uruguay: '598', Paraguay: '595',
+  Bolivia: '591', Panama: '507', 'Costa Rica': '506', Guatemala: '502',
+  Honduras: '504', 'El Salvador': '503', Nicaragua: '505', 'Rep. Dominicana': '1',
+  'United States': '1', USA: '1', Spain: '34', 'España': '34',
+}
+
+function getWhatsAppNumber(phone, country) {
+  if (!phone) return ''
+  const digits = phone.replace(/\D/g, '')
+  // If already has country code (starts with + or is long enough), use as-is
+  if (digits.length > 10) return digits
+  const prefix = COUNTRY_CODES[country] || '57' // default Colombia
+  return prefix + digits
+}
+
 // ─── Main component ─────────────────────────────────────────────────────────
 export default function ApplicantDetail() {
   const { t } = useTranslation()
   const { jobId, appId } = useParams()
+  const { company } = useCompany()
+  const { userDoc: currentUser, firebaseUser } = useAuth()
 
   const [app, setApp]             = useState(null)
   const [candidate, setCandidate] = useState(null)
@@ -89,9 +113,12 @@ export default function ApplicantDetail() {
   const [resumes, setResumes]     = useState([])
   const [testResults, setTestResults] = useState([])
   const [loading, setLoading]     = useState(true)
-  const [notes, setNotes]         = useState('')
+  const [notesList, setNotesList]   = useState([])
+  const [newNote, setNewNote]       = useState('')
   const [savingNotes, setSavingNotes] = useState(false)
-  const [notesMsg, setNotesMsg]   = useState('')
+  const [showRejectModal, setShowRejectModal] = useState(false)
+  const [rejectReason, setRejectReason]       = useState('')
+  const [rejecting, setRejecting]             = useState(false)
   const [advancing, setAdvancing] = useState(false)
 
   useEffect(() => {
@@ -100,7 +127,7 @@ export default function ApplicantDetail() {
       if (!fetchedApp || !fetchedJob) { setLoading(false); return }
       setApp(fetchedApp)
       setJob(fetchedJob)
-      setNotes(fetchedApp.internal_notes || '')
+      setNotesList(Array.isArray(fetchedApp.internal_notes) ? fetchedApp.internal_notes : [])
 
       const [c, r, tr] = await Promise.all([
         getCandidate(fetchedApp.candidate_id),
@@ -131,21 +158,61 @@ export default function ApplicantDetail() {
     const statusMap = { reviewing: 'Reviewed', interview: 'Reviewed', technical: 'Testing', offer: 'Reviewed', hired: 'Hired' }
     if (statusMap[nextStage]) await updateApplicationStatus(appId, statusMap[nextStage])
     setApp(prev => ({ ...prev, pipeline_stage: nextStage, stage_history: newHistory }))
+
+    // Send pipeline email notification
+    if (candidate?.email && job) {
+      try {
+        await sendPipelineEmail({
+          candidateEmail: candidate.email,
+          candidateName: [candidate.first_name, candidate.last_name].filter(Boolean).join(' '),
+          jobTitle: job.title,
+          companyName: company?.commercial_name || '',
+          newStage: nextStage,
+        })
+      } catch (err) {
+        console.error('Failed to queue pipeline email:', err)
+      }
+    }
+
     setAdvancing(false)
   }
 
   async function handleReject() {
+    setRejecting(true)
     const newHistory = { ...stageHistory, [REJECTED]: new Date().toISOString() }
     await updateApplicationPipeline(appId, REJECTED, newHistory)
-    await updateApplicationStatus(appId, 'Rejected')
-    setApp(prev => ({ ...prev, pipeline_stage: REJECTED, stage_history: newHistory, status: 'Rejected' }))
+    // Save rejection reason as feedback visible to the candidate
+    await updateApplicationStatus(appId, 'Rejected', rejectReason || null)
+    setApp(prev => ({ ...prev, pipeline_stage: REJECTED, stage_history: newHistory, status: 'Rejected', feedback_to_candidate: rejectReason }))
+
+    // Queue rejection email
+    if (candidate?.email && job) {
+      try {
+        await sendRejectionEmail({
+          candidateEmail: candidate.email,
+          candidateName: [candidate.first_name, candidate.last_name].filter(Boolean).join(' '),
+          jobTitle: job.title,
+          companyName: company?.commercial_name || '',
+          feedback: rejectReason,
+        })
+      } catch (err) {
+        console.error('Failed to queue rejection email:', err)
+      }
+    }
+
+    setRejecting(false)
+    setShowRejectModal(false)
+    setRejectReason('')
   }
 
-  async function handleSaveNotes() {
+  async function handleAddNote() {
+    if (!newNote.trim()) return
     setSavingNotes(true)
-    await updateApplicationNotes(appId, notes)
-    setNotesMsg('✓')
-    setTimeout(() => setNotesMsg(''), 2000)
+    const authorName = currentUser?.full_name || firebaseUser?.displayName || 'Unknown'
+    const authorPhoto = firebaseUser?.photoURL || ''
+    const note = await addApplicationNote(appId, newNote.trim(), authorName, authorPhoto)
+    setNotesList(prev => [...prev, note])
+    setNewNote('')
     setSavingNotes(false)
   }
 
@@ -160,7 +227,16 @@ export default function ApplicantDetail() {
 
   const resume = resumes.find(r => r.id === app.resume_id) || resumes[0]
   const data = resume?.extracted_data || {}
-  const score = app.fit_check?.score
+  const fitScore = app.fit_check?.score
+  const testScore = testResults[0]?.score
+  const hasFit = fitScore != null && fitScore > 0
+  const hasTest = testScore != null && testScore > 0
+  // Weighted: 40% fit check + 60% interview test
+  const combinedScore = hasFit && hasTest
+    ? Math.round(fitScore * 0.4 + testScore * 0.6)
+    : hasFit && !hasTest
+      ? fitScore
+      : hasTest ? testScore : 0
 
   return (
     <div className="max-w-5xl mx-auto space-y-5">
@@ -183,17 +259,24 @@ export default function ApplicantDetail() {
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-gray-500 dark:text-gray-400">
               {candidate?.city && <span>📍 {candidate.city}, {candidate.country}</span>}
               {candidate?.email && <span>✉ {candidate.email}</span>}
-              {candidate?.phone && <span>📱 {candidate.phone}</span>}
+              {candidate?.phone && (
+                <a href={`https://wa.me/${getWhatsAppNumber(candidate.phone, candidate.country)}`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-green-500 hover:text-green-400 font-medium">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492a.5.5 0 00.611.611l4.458-1.495A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-2.387 0-4.594-.822-6.339-2.2l-.444-.356-3.277 1.098 1.098-3.277-.356-.444A9.96 9.96 0 012 12C2 6.486 6.486 2 12 2s10 4.486 10 10-4.486 10-10 10z"/></svg>
+                  {candidate.phone}
+                </a>
+              )}
               <span>📅 {formatDate(app.applied_at)}</span>
             </div>
             <div className="mt-2">
               <Badge status="Active" label={job.title} />
             </div>
           </div>
-          {score != null && (
+          {combinedScore > 0 && (
             <div className="shrink-0 text-center">
-              <ScoreRing value={score} size={72} />
-              <p className="text-xs text-gray-500 mt-1">Fit Score</p>
+              <ScoreRing value={combinedScore} size={72} />
+              <p className="text-xs text-gray-500 mt-1">Score</p>
             </div>
           )}
         </div>
@@ -210,7 +293,7 @@ export default function ApplicantDetail() {
             </Button>
           )}
           {!isRejected && !isHired && (
-            <Button variant="danger" onClick={handleReject}>{t('company.pipeline.reject')}</Button>
+            <Button variant="danger" onClick={() => setShowRejectModal(true)}>{t('company.pipeline.reject')}</Button>
           )}
           {isHired && (
             <div className="px-4 py-2 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-sm font-medium">
@@ -365,6 +448,14 @@ export default function ApplicantDetail() {
               {tr.gemini_evaluation?.feedback && (
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 leading-relaxed">{tr.gemini_evaluation.feedback}</p>
               )}
+              {tr.video_url && (
+                <div className="mt-4">
+                  <h3 className="text-xs font-semibold text-gray-900 dark:text-white mb-2">🎥 {t('company.applicantDetail.interviewRecording')}</h3>
+                  <video controls className="w-full rounded-lg bg-gray-900" preload="metadata">
+                    <source src={tr.video_url} type="video/webm" />
+                  </video>
+                </div>
+              )}
             </Card>
           ))}
 
@@ -404,15 +495,67 @@ export default function ApplicantDetail() {
           {/* Internal notes */}
           <Card className="p-5">
             <h2 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">🗒 {t('company.applicantDetail.notes')}</h2>
-            <textarea rows={4} value={notes} onChange={e => setNotes(e.target.value)}
+
+            {/* Existing notes */}
+            {notesList.length > 0 && (
+              <div className="space-y-2.5 mb-3 max-h-60 overflow-y-auto scrollbar-thin">
+                {notesList.map((note, i) => (
+                  <div key={i} className="flex gap-2.5">
+                    {/* Author avatar */}
+                    {note.author_photo ? (
+                      <img src={note.author_photo} alt="" className="w-7 h-7 rounded-full object-cover shrink-0 mt-0.5" />
+                    ) : (
+                      <div className="w-7 h-7 rounded-full bg-brand-500 flex items-center justify-center text-white text-[10px] font-bold shrink-0 mt-0.5">
+                        {(note.author || '?')[0].toUpperCase()}
+                      </div>
+                    )}
+                    <div className="flex-1 p-2.5 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700">
+                      <p className="text-xs text-gray-700 dark:text-gray-300">{typeof note === 'string' ? note : note.text}</p>
+                      {note.author && (
+                        <div className="flex items-center gap-2 mt-1.5 text-[10px] text-gray-400">
+                          <span className="font-medium">{note.author}</span>
+                          <span>·</span>
+                          <span>{note.created_at ? new Date(note.created_at).toLocaleString() : ''}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* New note input */}
+            <textarea rows={2} value={newNote} onChange={e => setNewNote(e.target.value)}
               placeholder={t('company.applicantDetail.notesPlaceholder')}
               className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500 mb-2" />
-            <Button size="sm" onClick={handleSaveNotes} loading={savingNotes} className="w-full">
-              {notesMsg || t('common.save')}
+            <Button size="sm" onClick={handleAddNote} loading={savingNotes} disabled={!newNote.trim()} className="w-full">
+              {t('company.applicantDetail.addNote')}
             </Button>
           </Card>
         </div>
       </div>
+
+      {/* ── Rejection modal ──────────────────────────────────────────────── */}
+      <Modal open={showRejectModal} onClose={() => { setShowRejectModal(false); setRejectReason('') }}
+        title={t('company.pipeline.rejectTitle')}>
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600 dark:text-gray-400">{t('company.pipeline.rejectDesc')}</p>
+          <div>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">{t('company.pipeline.rejectReason')}</label>
+            <textarea rows={4} value={rejectReason} onChange={e => setRejectReason(e.target.value)}
+              placeholder={t('company.pipeline.rejectPlaceholder')}
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-500" />
+          </div>
+          <div className="flex gap-2">
+            <Button variant="ghost" className="flex-1" onClick={() => { setShowRejectModal(false); setRejectReason('') }}>
+              {t('common.cancel')}
+            </Button>
+            <Button variant="danger" className="flex-1" onClick={handleReject} loading={rejecting} disabled={!rejectReason.trim()}>
+              {t('company.pipeline.confirmReject')}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

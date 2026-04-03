@@ -14,7 +14,6 @@ import Input from '../../components/ui/Input'
 import Select from '../../components/ui/Select'
 import EmptyState from '../../components/ui/EmptyState'
 import Spinner from '../../components/ui/Spinner'
-import JobForm from './JobForm'
 
 export default function JobList() {
   const { t } = useTranslation()
@@ -25,13 +24,30 @@ export default function JobList() {
   const [search, setSearch]         = useState('')
   const navigate = useNavigate()
   const [loading, setLoading]       = useState(true)
-  const [showForm, setShowForm]     = useState(false)
   const [showInvite, setShowInvite]   = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole]   = useState('recruiter')
   const [inviting, setInviting]       = useState(false)
   const [inviteMsg, setInviteMsg]     = useState('')
   const [inviteError, setInviteError] = useState('')
+  const [copiedId, setCopiedId]       = useState(null)
+
+  async function handleShare(jobId) {
+    const url = `${window.location.origin}/jobs/${jobId}`
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: t('company.jobs.shareTitle'), url })
+      } else {
+        await navigator.clipboard.writeText(url)
+        setCopiedId(jobId)
+        setTimeout(() => setCopiedId(null), 2000)
+      }
+    } catch {
+      await navigator.clipboard.writeText(url)
+      setCopiedId(jobId)
+      setTimeout(() => setCopiedId(null), 2000)
+    }
+  }
 
   async function load() {
     if (!company?.id) return
@@ -68,7 +84,10 @@ export default function JobList() {
     setInviteError('')
     setInviteMsg('')
     try {
-      await sendInvitation(company.id, userDoc.id, inviteEmail.trim(), inviteRole)
+      await sendInvitation(company.id, userDoc.id, inviteEmail.trim(), inviteRole, {
+        companyName: company.commercial_name,
+        invitedByName: userDoc.full_name,
+      })
       setInviteMsg(t('company.invite.sent'))
       setInviteEmail('')
       setTimeout(() => { setInviteMsg(''); setShowInvite(false) }, 1500)
@@ -88,7 +107,7 @@ export default function JobList() {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('company.jobs.title')}</h1>
         <div className="flex gap-2">
           <Button variant="secondary" size="sm" onClick={() => setShowInvite(true)}>{t('company.invite.title')}</Button>
-          <Button size="sm" onClick={() => setShowForm(true)}>+ {t('company.jobs.new')}</Button>
+          <Button size="sm" onClick={() => navigate('/company/jobs/new')}>+ {t('company.jobs.new')}</Button>
         </div>
       </div>
 
@@ -101,7 +120,7 @@ export default function JobList() {
 
       {jobs.length === 0
         ? <EmptyState icon={<span className="text-5xl">📋</span>} title={t('company.jobs.empty')}
-            action={<Button onClick={() => setShowForm(true)}>+ {t('company.jobs.new')}</Button>} />
+            action={<Button onClick={() => navigate('/company/jobs/new')}>+ {t('company.jobs.new')}</Button>} />
         : filtered.length === 0
           ? <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-8">{t('company.jobs.noResults')}</p>
           : (
@@ -128,6 +147,15 @@ export default function JobList() {
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
+                      <Button variant="ghost" size="sm" onClick={() => handleShare(job.id)} title={t('common.share')}>
+                        {copiedId === job.id ? (
+                          <span className="text-green-500 text-xs font-medium">✓ {t('common.copied')}</span>
+                        ) : (
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                          </svg>
+                        )}
+                      </Button>
                       <Link to={`/company/jobs/${job.id}/applicants`}>
                         <Button variant="secondary" size="sm">{t('company.jobs.applicants')}</Button>
                       </Link>
@@ -142,12 +170,6 @@ export default function JobList() {
           </div>
         )
       }
-
-      {/* Job form modal */}
-      <Modal open={showForm} onClose={() => setShowForm(false)}
-        title={t('company.jobs.new')} maxWidth="max-w-xl">
-        <JobForm companyId={company?.id} onSuccess={() => { setShowForm(false); load() }} />
-      </Modal>
 
       {/* Invite modal */}
       <Modal open={showInvite} onClose={() => { setShowInvite(false); setInviteMsg(''); setInviteError('') }}

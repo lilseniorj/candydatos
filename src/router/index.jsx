@@ -12,6 +12,7 @@ import AuthGuard      from './guards/AuthGuard'
 
 // Public
 import LandingPage from '../pages/public/LandingPage'
+import JobPreview  from '../pages/public/JobPreview'
 import SeedPage    from '../pages/SeedPage'
 
 // Auth pages
@@ -19,6 +20,8 @@ import CompanyLogin     from '../pages/auth/CompanyLogin'
 import CompanyRegister  from '../pages/auth/CompanyRegister'
 import CandidateLogin   from '../pages/auth/CandidateLogin'
 import CandidateRegister from '../pages/auth/CandidateRegister'
+import UnifiedLogin      from '../pages/auth/UnifiedLogin'
+import PortalChooser     from '../pages/auth/PortalChooser'
 
 // Company pages
 import CompanySetup     from '../pages/company/CompanySetup'
@@ -42,6 +45,16 @@ import MyApplications   from '../pages/candidate/MyApplications'
 const router = createBrowserRouter([
   // Landing
   { path: '/', element: <LandingPage /> },
+  { path: '/jobs/:jobId', element: <JobPreview /> },
+
+  // Unified login
+  {
+    element: <AuthLayout />,
+    children: [
+      { path: '/login', element: <UnifiedLogin /> },
+      { path: '/choose-portal', element: <PortalChooser /> },
+    ],
+  },
 
   // Seed (temporary — remove after use)
   { path: '/seed', element: <SeedPage /> },
@@ -72,6 +85,7 @@ const router = createBrowserRouter([
       children: [
         { path: '/company/dashboard',               element: <CompanyDashboard /> },
         { path: '/company/jobs',                    element: <JobList /> },
+        { path: '/company/jobs/new',                element: <JobEdit /> },
         { path: '/company/jobs/:jobId/edit',         element: <JobEdit /> },
         { path: '/company/jobs/:jobId/applicants',              element: <ApplicantList /> },
         { path: '/company/jobs/:jobId/applicants/:appId',      element: <ApplicantDetail /> },

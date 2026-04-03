@@ -2,29 +2,56 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { getJob, updateJob } from '../../services/jobs'
+import { useCompany } from '../../context/CompanyContext'
+import { getJob, updateJob, createJob } from '../../services/jobs'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import Input from '../../components/ui/Input'
 import Select from '../../components/ui/Select'
 import Spinner from '../../components/ui/Spinner'
 
+const EDUCATION_LEVELS = [
+  { value: '', label: '—' },
+  { value: 'none', label: 'No requerido' },
+  { value: 'high_school', label: 'Bachiller' },
+  { value: 'technical', label: 'Técnico / Tecnólogo' },
+  { value: 'professional', label: 'Profesional' },
+  { value: 'postgraduate', label: 'Posgrado / Maestría' },
+]
+
+function arrayToString(val) {
+  return Array.isArray(val) ? val.join(', ') : val || ''
+}
+
+function parseCommaSeparated(val) {
+  if (Array.isArray(val)) return val
+  return val ? val.split(',').map(s => s.trim()).filter(Boolean) : []
+}
+
 export default function JobEdit() {
   const { t } = useTranslation()
   const { jobId } = useParams()
   const navigate = useNavigate()
-  const [loading, setLoading] = useState(true)
+  const { company } = useCompany()
+  const isNew = !jobId
+  const [loading, setLoading] = useState(!isNew)
   const [saveMsg, setSaveMsg] = useState('')
 
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm()
 
   useEffect(() => {
+    if (isNew) return
     async function load() {
       const job = await getJob(jobId)
       if (!job) return navigate('/company/jobs')
       reset({
         ...job,
-        benefits: Array.isArray(job.benefits) ? job.benefits.join(', ') : job.benefits || '',
+        benefits: arrayToString(job.benefits),
+        allowed_cities: arrayToString(job.allowed_cities),
+        required_certifications: arrayToString(job.required_certifications),
+        required_languages: arrayToString(job.required_languages),
+        required_skills: arrayToString(job.required_skills),
+        accept_remote_other_cities: job.accept_remote_other_cities ? 'true' : 'false',
         application_deadline: job.application_deadline?.toDate?.()?.toISOString?.().split('T')[0] || '',
       })
       setLoading(false)
@@ -38,9 +65,11 @@ export default function JobEdit() {
     { value: 'Hybrid',  label: t('company.jobForm.hybrid') },
   ]
   const statusOpts = [
-    { value: 'Active', label: 'Active' },
-    { value: 'Paused', label: 'Paused' },
-    { value: 'Closed', label: 'Closed' },
+    { value: 'Active', label: 'Active' }, { value: 'Paused', label: 'Paused' }, { value: 'Closed', label: 'Closed' },
+  ]
+  const remoteOpts = [
+    { value: 'false', label: t('common.no') },
+    { value: 'true',  label: t('common.yes') },
   ]
 
   async function onSubmit(data) {
@@ -48,19 +77,29 @@ export default function JobEdit() {
       title:                     data.title,
       description:               data.description,
       work_modality:             data.work_modality,
-      status:                    data.status,
       country:                   data.country,
       min_salary:                parseInt(data.min_salary)   || 0,
       max_salary:                parseInt(data.max_salary)   || 0,
       years_experience_required: parseInt(data.years_experience_required) || 0,
       max_applicants:            parseInt(data.max_applicants) || 100,
-      benefits:                  data.benefits ? data.benefits.split(',').map(s => s.trim()).filter(Boolean) : [],
-      required_test_id:          data.required_test_id || null,
+      benefits:                  parseCommaSeparated(data.benefits),
       application_deadline:      data.application_deadline || null,
+      allowed_cities:            parseCommaSeparated(data.allowed_cities),
+      accept_remote_other_cities: data.accept_remote_other_cities === 'true',
+      min_education:             data.min_education || '',
+      required_certifications:   parseCommaSeparated(data.required_certifications),
+      required_languages:        parseCommaSeparated(data.required_languages),
+      required_skills:           parseCommaSeparated(data.required_skills),
     }
-    await updateJob(jobId, payload)
-    setSaveMsg('✓')
-    setTimeout(() => setSaveMsg(''), 2000)
+    if (isNew) {
+      await createJob(company.id, payload)
+      navigate('/company/jobs')
+    } else {
+      payload.status = data.status
+      await updateJob(jobId, payload)
+      setSaveMsg('✓')
+      setTimeout(() => setSaveMsg(''), 2000)
+    }
   }
 
   if (loading) return <div className="flex items-center justify-center py-24"><Spinner size="lg" /></div>
@@ -72,7 +111,7 @@ export default function JobEdit() {
         {t('company.jobs.title')}
       </Link>
 
-      <h1 className="text-xl font-bold text-gray-900 dark:text-white">{t('company.jobs.editJob')}</h1>
+      <h1 className="text-xl font-bold text-gray-900 dark:text-white">{isNew ? t('company.jobs.new') : t('company.jobs.editJob')}</h1>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <Card className="p-5 space-y-4">
@@ -88,13 +127,26 @@ export default function JobEdit() {
         <Card className="p-5">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             <Select label={t('company.jobForm.modality')} options={modalityOpts} {...register('work_modality')} />
-            <Select label={t('company.jobs.status')} options={statusOpts} {...register('status')} />
+            {!isNew && <Select label={t('company.jobs.status')} options={statusOpts} {...register('status')} />}
             <Input label={t('company.jobForm.country')} {...register('country')} />
             <Input label={t('company.jobForm.minSalary')} type="number" {...register('min_salary')} />
             <Input label={t('company.jobForm.maxSalary')} type="number" {...register('max_salary')} />
             <Input label={t('company.jobForm.experience')} type="number" {...register('years_experience_required')} />
             <Input label={t('company.jobForm.maxApplicants')} type="number" {...register('max_applicants')} />
             <Input label={t('company.jobForm.deadline')} type="date" {...register('application_deadline')} />
+          </div>
+        </Card>
+
+        {/* Requirements */}
+        <Card className="p-5">
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">{t('company.jobForm.requirements')}</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <Input label={t('company.jobForm.allowedCities')} placeholder="Medellín, Bogotá..." {...register('allowed_cities')} />
+            <Select label={t('company.jobForm.acceptRemote')} options={remoteOpts} {...register('accept_remote_other_cities')} />
+            <Select label={t('company.jobForm.minEducation')} options={EDUCATION_LEVELS} {...register('min_education')} />
+            <Input label={t('company.jobForm.requiredCerts')} placeholder="AWS, PMP..." {...register('required_certifications')} />
+            <Input label={t('company.jobForm.requiredLangs')} placeholder="Español, Inglés B2..." {...register('required_languages')} />
+            <Input label={t('company.jobForm.requiredSkills')} placeholder="React, Node.js..." {...register('required_skills')} />
           </div>
         </Card>
 

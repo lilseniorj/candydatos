@@ -30,7 +30,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-2">
             <LanguageToggle />
             <ThemeToggle />
-            <Link to="/company/login"
+            <Link to="/login"
               className="hidden sm:inline-flex items-center px-4 py-2 text-sm font-medium text-brand-600 dark:text-brand-400 border border-brand-300 dark:border-brand-700 rounded-lg hover:bg-brand-50 dark:hover:bg-brand-900/30 transition-colors">
               {t('nav.login')}
             </Link>
@@ -151,45 +151,24 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Portal CTA */}
+      {/* CTA Final */}
       <section className="bg-gray-50 dark:bg-gray-800/50 py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6">
-          <h2 className="text-3xl font-bold text-center mb-12">{t('landing.portals.title')}</h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Company */}
-            <div className="p-8 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm text-center">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-brand-100 dark:bg-brand-900/40 flex items-center justify-center text-3xl">🏢</div>
-              <h3 className="text-xl font-bold mb-2">{t('landing.portals.company.title')}</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">{t('landing.portals.company.desc')}</p>
-              <div className="flex flex-col gap-2">
-                <Link to="/company/register"
-                  className="px-6 py-2.5 bg-brand-500 text-white rounded-lg text-sm font-semibold hover:bg-brand-600 transition-colors">
-                  {t('landing.portals.company.register')}
-                </Link>
-                <Link to="/company/login"
-                  className="px-6 py-2.5 border border-brand-300 dark:border-brand-700 text-brand-600 dark:text-brand-400 rounded-lg text-sm font-medium hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors">
-                  {t('landing.portals.company.login')}
-                </Link>
-              </div>
-            </div>
-
-            {/* Candidate */}
-            <div className="p-8 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm text-center">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-green-100 dark:bg-green-900/40 flex items-center justify-center text-3xl">👤</div>
-              <h3 className="text-xl font-bold mb-2">{t('landing.portals.candidate.title')}</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">{t('landing.portals.candidate.desc')}</p>
-              <div className="flex flex-col gap-2">
-                <Link to="/candidate/register"
-                  className="px-6 py-2.5 bg-green-500 text-white rounded-lg text-sm font-semibold hover:bg-green-600 transition-colors">
-                  {t('landing.portals.candidate.register')}
-                </Link>
-                <Link to="/candidate/login"
-                  className="px-6 py-2.5 border border-green-300 dark:border-green-700 text-green-600 dark:text-green-400 rounded-lg text-sm font-medium hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors">
-                  {t('landing.portals.candidate.login')}
-                </Link>
-              </div>
-            </div>
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 text-center">
+          <h2 className="text-3xl font-bold mb-4">{t('landing.cta.title')}</h2>
+          <p className="text-gray-500 dark:text-gray-400 mb-8">{t('landing.cta.subtitle')}</p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link to="/company/register"
+              className="px-8 py-3 rounded-xl bg-brand-500 text-white font-semibold hover:bg-brand-600 transition-colors shadow-lg shadow-brand-500/30">
+              {t('landing.hero.cta_company')}
+            </Link>
+            <Link to="/candidate/register"
+              className="px-8 py-3 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+              {t('landing.hero.cta_candidate')}
+            </Link>
           </div>
+          <p className="text-sm text-gray-400 dark:text-gray-500 mt-6">
+            {t('landing.cta.already')} <Link to="/login" className="text-brand-500 hover:underline font-medium">{t('nav.login')}</Link>
+          </p>
         </div>
       </section>
 

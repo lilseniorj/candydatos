@@ -1,5 +1,5 @@
 import {
-  collection, doc, addDoc, updateDoc, getDocs, getDoc,
+  collection, doc, addDoc, updateDoc, deleteDoc, getDocs, getDoc,
   query, where, orderBy, serverTimestamp,
 } from 'firebase/firestore'
 import { db } from '../firebase/config'
@@ -69,16 +69,24 @@ export async function updateApplicationPipeline(appId, stage, stageHistory) {
   })
 }
 
-export async function updateApplicationNotes(appId, notes) {
+export async function addApplicationNote(appId, noteText, authorName, authorPhoto) {
+  const snap = await getDoc(doc(db, 'applications', appId))
+  const existing = snap.data()?.internal_notes || []
+  const newNote = { text: noteText, author: authorName, author_photo: authorPhoto || '', created_at: new Date().toISOString() }
   await updateDoc(doc(db, 'applications', appId), {
-    internal_notes: notes,
+    internal_notes: [...existing, newNote],
     updated_at: serverTimestamp(),
   })
+  return newNote
 }
 
 export async function getApplication(appId) {
   const snap = await getDoc(doc(db, 'applications', appId))
   return snap.exists() ? { id: snap.id, ...snap.data() } : null
+}
+
+export async function deleteApplication(appId) {
+  await deleteDoc(doc(db, 'applications', appId))
 }
 
 export async function assignReviewer(appId, reviewerId) {
