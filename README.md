@@ -1,6 +1,8 @@
-# candydatos.com
+# candydatos
 
-Plataforma de reclutamiento inteligente que conecta empresas con candidatos a través de ofertas laborales y evaluaciones psicométricas con IA (Big Five).
+Plataforma web de reclutamiento impulsada por inteligencia artificial que conecta empresas con candidatos mediante evaluaciones automatizadas, entrevistas en vivo con un agente AI y gestión completa del pipeline de selección.
+
+**URL de producción:** https://candydatos.web.app
 
 ---
 
@@ -12,12 +14,16 @@ Plataforma de reclutamiento inteligente que conecta empresas con candidatos a tr
 | Estilos | TailwindCSS v4 (`@tailwindcss/vite`) |
 | Enrutamiento | react-router-dom v7 |
 | Formularios | react-hook-form |
-| Autenticación | Firebase Auth — email/password flow |
+| Autenticación | Firebase Auth — Google OAuth 2.0 |
 | Base de datos | Cloud Firestore (NoSQL) |
 | Almacenamiento | Firebase Storage |
-| IA generativa | Gemini API (`@google/generative-ai`) |
+| Cloud Functions | Node.js 22 + Nodemailer (envío de emails) |
+| IA generativa | Gemini 2.5 Flash — texto, audio nativo y video en tiempo real |
+| Entrevistas en vivo | Gemini Live API (audio bidireccional + video 1 FPS) |
+| Reportes | jsPDF (generación de reportes PDF del candidato) |
 | Internacionalización | react-i18next + i18next-browser-languagedetector |
 | Gráficas | recharts |
+| Hosting | Firebase Hosting (CDN global) |
 | Fuente | Inter (Google Fonts) |
 
 ---
@@ -46,6 +52,11 @@ npm install
 npm run dev
 ```
 
+4. Para desplegar:
+```bash
+npx vite build && npx firebase deploy
+```
+
 ---
 
 ## Estructura del proyecto
@@ -54,353 +65,358 @@ npm run dev
 src/
 ├── i18n/               # Internacionalización (en/es)
 ├── firebase/           # Configuración de Firebase
-├── context/            # AuthContext, ThemeContext, CompanyContext
-├── services/           # Lógica de negocio (Firestore + Gemini)
+├── context/            # AuthContext, ThemeContext, CompanyContext, ToastContext
+├── services/           # Lógica de negocio (Firestore + Gemini + reportes)
+│   ├── gemini.js       # Fit check, generación/evaluación de tests
+│   ├── geminiLive.js   # Entrevista en vivo con Gemini Live API
+│   ├── interviewEvaluator.js  # Evaluación post-entrevista
+│   ├── reportPdf.js    # Generación de reportes PDF del candidato
+│   ├── testCatalog.js  # Catálogo de 4 tests psicotécnicos
+│   ├── notifications.js # Emails de pipeline, rechazo e invitaciones
+│   └── ...             # applications, jobs, companies, resumes, etc.
 ├── router/             # Rutas y guards de acceso
 ├── layouts/            # AuthLayout, CompanyLayout, CandidateLayout
 ├── pages/
-│   ├── public/         # Landing page
+│   ├── public/         # Landing page, job preview público
 │   ├── auth/           # Login y registro (ambos portales)
-│   ├── company/        # Dashboard, ofertas, candidatos, analytics
-│   └── candidate/      # Perfil, hojas de vida, vacantes, aplicaciones
+│   ├── company/        # Dashboard, ofertas, candidatos, analytics, settings
+│   └── candidate/      # Perfil, hojas de vida, job board, aplicaciones
 ├── components/
-│   ├── ui/             # Button, Input, Card, Badge, Modal, etc.
+│   ├── ui/             # Button, Input, Card, Badge, Modal, Select, etc.
+│   ├── interview/      # LiveInterview (entrevista AI en vivo)
+│   ├── test/           # PsychometricTest (componente de tests)
+│   ├── skeletons/      # Loading skeletons
 │   └── layout/         # ThemeToggle, LanguageToggle
+├── hooks/              # useAudioCapture, useAudioPlayback
 └── utils/              # profileCompletion, etc.
+
+scripts/
+├── seed-companies.mjs  # Poblar DB con 10 empresas y 37 ofertas
+├── upload-logos.mjs    # Subir logos a Firebase Storage
+├── update-tests.mjs    # Asignar tests a ofertas
+├── seed-users.mjs      # Crear usuarios de empresa (utilidad)
+├── cleanup-users.mjs   # Eliminar usuarios de prueba
+├── seed-jobs.mjs       # Seed original de ofertas de Google
+└── logos/              # Imágenes de logos de empresas
+
+functions/
+└── index.js            # Cloud Function: onMailCreated (envío de emails)
 ```
 
 ---
 
 ## Portales
 
-La aplicación tiene dos portales de acceso separados:
+La aplicación tiene dos portales de acceso separados con autenticación mediante Google OAuth:
 
-| Portal | Users | Collection | Entry point |
-|--------|-------|------------|-------------|
-| **Company Portal** | Recruiters / Admins | `company_users` | `/company/login` |
-| **Candidate Portal** | Job seekers | `candidates` | `/candidate/login` |
+| Portal | Usuarios | Collection | Entry point |
+|--------|----------|------------|-------------|
+| **Portal Empresa** | Reclutadores / Admins | `company_users` | `/company/login` |
+| **Portal Candidato** | Aspirantes | `candidates` | `/candidate/login` |
 
-Ambos portales usan Firebase Auth con correo y contraseña. El documento en Firestore usa el `uid` de Firebase como `id`. El campo `email` se copia desde Firebase Auth para facilitar las consultas — la fuente de verdad de las credenciales siempre es Firebase Auth.
+Ambos portales usan Firebase Auth con Google Sign-In. Un mismo usuario puede tener cuentas en ambos portales sin cerrar sesión.
 
-Al iniciar sesión, la app determina a qué portal pertenece el usuario buscando su `uid` en la colección correspondiente. Un `company_user` no puede acceder al portal de candidatos y viceversa.
+### Rutas principales
 
 | Portal | URL | Descripción |
 |--------|-----|-------------|
-| Landing | `/` | Página pública con explicación de la plataforma y enlaces a ambos portales |
-| Empresa — Login | `/company/login` | Inicio de sesión para empresas |
-| Empresa — Registro | `/company/register` | Registro de nuevos usuarios empresa |
+| Landing | `/` | Página pública con explicación de la plataforma |
+| Job Preview | `/jobs/:jobId` | Preview público de una oferta (con Open Graph meta) |
+| Empresa — Login | `/company/login` | Google Sign-In para empresas |
 | Empresa — Setup | `/company/setup` | Crear empresa o aceptar invitación |
-| Empresa — Dashboard | `/company/dashboard` | Resumen general |
-| Empresa — Ofertas | `/company/jobs` | Gestión de ofertas laborales |
-| Empresa — Candidatos | `/company/jobs/:id/applicants` | Candidatos por oferta |
-| Empresa — Analytics | `/company/analytics` | Dashboard psicométrico |
-| Candidato — Login | `/candidate/login` | Inicio de sesión para candidatos |
-| Candidato — Registro | `/candidate/register` | Registro de nuevos candidatos |
+| Empresa — Dashboard | `/company/dashboard` | Resumen general con métricas |
+| Empresa — Ofertas | `/company/jobs` | CRUD de ofertas laborales |
+| Empresa — Nueva oferta | `/company/jobs/new` | Crear oferta con requisitos |
+| Empresa — Candidatos | `/company/jobs/:id/applicants` | Lista de aplicantes por oferta |
+| Empresa — Detalle | `/company/jobs/:jobId/applicants/:appId` | Detalle completo del candidato + PDF |
+| Empresa — Analytics | `/company/analytics` | Dashboard de métricas y gráficas |
+| Empresa — Tests | `/company/tests` | Catálogo de tests psicotécnicos |
+| Empresa — Settings | `/company/settings` | Configuración, logo, equipo |
+| Candidato — Login | `/candidate/login` | Google Sign-In para candidatos |
 | Candidato — Perfil | `/candidate/profile` | Perfil + hojas de vida |
-| Candidato — Vacantes | `/candidate/jobs` | Explorar y filtrar ofertas |
-| Candidato — Aplicar | `/candidate/apply/:jobId` | Flujo de aplicación paso a paso |
-| Candidato — Mis apps | `/candidate/applications` | Historial de aplicaciones |
+| Candidato — Job Board | `/candidate/jobs` | Explorar ofertas con filtros |
+| Candidato — Aplicar | `/candidate/apply/:jobId` | Flujo de aplicación (4 pasos) |
+| Candidato — Mis apps | `/candidate/applications` | Historial y seguimiento |
+| Candidato — Settings | `/candidate/settings` | Configuración de cuenta |
 
 ---
 
-## Portal de Empresas — Flujo de usuario
+## Flujo de aplicación del candidato
 
-### Paso 1 — Autenticación
-El usuario entra a `/company/login` y puede **registrarse** o **iniciar sesión** con correo y contraseña.
+El proceso de aplicación tiene 4 pasos secuenciales, reanudable en cualquier momento:
 
-### Pasos 2 y 3 — Configuración de empresa
-Después de iniciar sesión, la app busca en `company_users` un documento con el `uid` del usuario:
+### Paso 1 — Selección de CV
+El candidato elige una de sus hojas de vida previamente cargadas y procesadas por Gemini AI.
 
-| Scenario | Outcome |
-|----------|---------|
-| El usuario ya tiene una empresa asignada (`company_id`) | Se redirige directamente al dashboard de la empresa |
-| El usuario existe pero no tiene empresa | Ve las invitaciones pendientes en `company_invitations` y la opción de **crear una nueva empresa** |
-| Es el primer inicio de sesión (no existe documento) | Se crea el registro en `company_users`; el usuario ve invitaciones o el formulario para crear empresa |
+### Paso 2 — Fit Check (Validación AI)
+Gemini compara el CV contra los requisitos de la oferta y genera:
+- **Score general** (0-100)
+- **Scores por dimensión**: experiencia, habilidades, educación
+- **Skills coincidentes y faltantes**
+- **Fortalezas y áreas de mejora**
+- **Feedback narrativo**
 
-Un **admin** puede invitar a otros usuarios enviando una invitación a través de `company_invitations`. El invitado se registra normalmente y queda vinculado a la empresa al aceptar.
+Si el candidato aprueba (score >= umbral), avanza al siguiente paso. Si no, recibe retroalimentación detallada.
 
-### Paso 4 — Gestión de ofertas laborales
-Desde el dashboard de la empresa, el usuario puede:
+### Paso 3 — Entrevista AI en vivo
+Entrevista de 2 minutos con "Ana", un agente AI entrevistador que:
+- Genera preguntas dinámicas basadas en el puesto, CV y fit score
+- Mantiene conversación bidireccional por audio en tiempo real (Gemini Live API)
+- Analiza video del candidato a 1 FPS (expresiones faciales, lenguaje corporal)
+- Cubre 6 categorías psicotécnicas:
+  - Conductuales/situacionales (equivale a SJT)
+  - Inteligencia emocional
+  - Autoconciencia (equivale a Big Five)
+  - Técnicas del rol
+  - Motivación
+  - Resolución de problemas (equivale a Razonamiento Cognitivo)
+- Graba video de la entrevista (WebM → Firebase Storage)
+- Al finalizar, evalúa el transcript en 5 dimensiones: comunicación, IE, experiencia, resolución de problemas, profesionalismo
 
-| Action | Details |
-|--------|---------|
-| Ver todas las ofertas | Filtradas por estado (`Active`, `Paused`, `Closed`) |
-| Crear / Editar / Eliminar ofertas | CRUD completo sobre `job_offers` |
-| Asignar un reclutador responsable | Guarda `reviewer_id` en cada `application` |
-| Filtrar candidatos | Por estado, fecha, puntaje de test, etc. |
-| Aceptar o rechazar candidatos | Actualiza `application.status` a `"Hired"` o `"Rejected"` |
-| Asignar un manager a un candidato | Actualiza `reviewer_id` en una `application` específica |
-
-### Paso 5 — Dashboard de historial de candidatos
-Vista por oferta que muestra el embudo completo de candidatos: total recibidos, en revisión, en pruebas, contratados y rechazados. Se obtiene de `applications` agrupado por `job_offer_id`.
-
-### Paso 6 — Dashboard de resultados psicométricos
-Vista descriptiva por candidato que muestra sus puntajes Big Five desde `test_results.trait_scores`, permitiendo comparar candidatos entre sí por dimensión de personalidad.
+### Paso 4 — Aplicación enviada
+La aplicación cambia a estado `Pending` y el candidato puede dar seguimiento desde "Mis aplicaciones".
 
 ---
 
-## Portal de Candidatos — Flujo de usuario
+## Pipeline de selección (Portal Empresa)
 
-### Paso 1 — Autenticación
-El candidato entra a `/candidate/login` y puede **registrarse** o **iniciar sesión** con correo y contraseña.
+La empresa gestiona candidatos mediante un pipeline visual con 7 estados:
 
-### Paso 2 — Perfil y hoja de vida
-Después de iniciar sesión, el candidato completa su perfil y sube al menos una hoja de vida (PDF/DOCX guardado en Firebase Storage). Al subir el documento, **Gemini API** lo procesa automáticamente y:
+```
+📥 Recibido → 👁 En revisión → 🎤 Entrevista → 💻 Prueba técnica → 📝 Oferta → ✅ Contratado
+                                                                                    ❌ Rechazado
+```
 
-- Extrae información básica (nombre, habilidades, experiencia, educación) → se guarda en `candidate_resumes.extracted_data`
-- Genera sugerencias de mejora → se guardan en `candidate_resumes.suggestions`
+Cada cambio de estado:
+- Envía un **email automático** al candidato (vía Cloud Functions + Nodemailer)
+- Crea una **notificación in-app** visible en el portal del candidato
+- Registra **timestamp** en el historial de la aplicación
 
-### Paso 3 — Banner de progreso del perfil
-Se muestra una barra de progreso en la parte superior del dashboard del candidato. El porcentaje se calcula con base en los campos de `candidates` y la existencia de al menos una hoja de vida:
+### Detalle del candidato
+La empresa puede ver por cada aplicante:
+- Información personal y de contacto (con link directo a WhatsApp)
+- Skills extraídas del CV
+- Experiencia y educación
+- Fit Check con scores desglosados
+- Resultados de entrevista AI con gráfico de dimensiones
+- Video grabado de la entrevista
+- Historial del pipeline con timestamps
+- Notas internas del equipo
+- **Reporte PDF descargable** con toda la evaluación
 
-| Criteria | Weight |
-|----------|--------|
-| Información básica completa (`first_name`, `last_name`, `phone`, `city`, `country`, `identification_*`) | 60% |
-| Al menos una hoja de vida subida | 40% |
+### Reporte PDF
+Documento profesional generado con jsPDF que incluye:
+- Encabezado con branding de candydatos + empresa
+- Datos del candidato y oferta
+- Fit Check: score general + sub-scores + skills
+- Entrevista AI: score + barras por dimensión + feedback
+- Recomendación AI: Recomendado / Con reservas / No recomendado
 
-El porcentaje actual se guarda en `candidates.profile_completion_pct` y se actualiza en tiempo real cada vez que el candidato guarda cambios.
+---
 
-### Paso 4 — Ver y filtrar ofertas laborales
-Una vez que el perfil está al 100%, el candidato puede ver las `job_offers` con `status = "Active"` y filtrarlas u ordenarlas por:
+## Tests psicotécnicos
 
-| Filter | Field |
-|--------|-------|
-| Rango salarial | `min_salary` / `max_salary` |
-| País | `country` |
-| Cargo / palabras clave | `title`, `description` |
-| Modalidad de trabajo | `work_modality` |
-| Ordenar por fecha | `created_at` |
-| Ordenar por salario | `min_salary` |
+El catálogo incluye 4 tipos de tests basados en literatura académica:
 
-### Paso 5 — Aplicar con validación de Gemini
-Para aplicar, el candidato selecciona una de sus hojas de vida. **Gemini API** compara la hoja de vida contra los requisitos de la oferta y devuelve un resultado guardado en `applications.fit_check`:
+| Test | Tipo | Dimensiones | Respaldo |
+|------|------|-------------|----------|
+| **Big Five (OCEAN)** | Personalidad | Apertura, Responsabilidad, Extraversión, Amabilidad, Neuroticismo | Barrick & Mount (1991), Costa & McCrae (1992) |
+| **Inteligencia Emocional** | IE | Autoconciencia, Autorregulación, Motivación, Empatía, Habilidades Sociales | Goleman (1995) |
+| **Razonamiento Cognitivo** | Aptitud | Verbal, Numérico, Lógico, Patrones, Pensamiento Crítico | Schmidt & Hunter (1998) |
+| **Juicio Situacional (SJT)** | Comportamiento | Decisión, Conflictos, Priorización, Equipo, Ética, Liderazgo, Cliente, Adaptabilidad | McDaniel et al. (2007) |
 
-| Outcome | Next action |
-|---------|-------------|
-| `fit_check.passed = true` | La aplicación continúa al siguiente paso |
-| `fit_check.passed = false` | El candidato recibe el `fit_check.feedback` y no puede continuar |
+Las preguntas son generadas dinámicamente por Gemini adaptadas a cada oferta. El agente de entrevista cubre las 4 categorías de forma conversacional dentro de la entrevista de 2 minutos.
 
-### Paso 6 — Test evaluado por Gemini
-Si la oferta tiene un `required_test_id`, después de pasar la validación el candidato realiza el test. **Gemini API** evalúa las respuestas y guarda el resultado en `test_results` con un mapa `gemini_evaluation` que contiene el puntaje, el desglose por dimensión y retroalimentación cualitativa.
+---
 
-### Paso 7 — Borrador en tiempo real y retoma de proceso
-Cada paso de la aplicación se guarda en tiempo real en `applications.current_step` a través de Firestore. Si el candidato abandona el proceso, al volver la app lee `current_step` y retoma desde donde lo dejó.
+## Sistema de notificaciones por email
 
-| `current_step` value | Meaning |
-|----------------------|---------|
-| `"cv_selection"`     | El candidato aún no ha seleccionado una hoja de vida |
-| `"fit_check"`        | Hoja de vida seleccionada, esperando validación de Gemini |
-| `"test"`             | Validación aprobada, test en curso |
-| `"submitted"`        | Aplicación completada y enviada |
+Firebase Cloud Functions + Nodemailer envían correos automáticos HTML para:
 
-Las aplicaciones con `status = "Draft"` solo son visibles para el candidato.
+| Evento | Template |
+|--------|----------|
+| Invitación a equipo | Email con link para unirse a la empresa |
+| Cambio de estado en pipeline | Email personalizado por etapa (En revisión, Entrevista, Prueba técnica, Oferta, Contratado) |
+| Rechazo de aplicación | Email con feedback y razón del rechazo |
 
-### Paso 8 — Mis aplicaciones
-El candidato tiene una página dedicada donde puede ver todas sus `applications` con:
-- Nombre de la oferta y empresa
-- Estado actual (`status`)
-- Comentarios del reclutador (`feedback_to_candidate`), si los hay
-- Fecha en que aplicó (`applied_at`)
+Todos los emails se crean como documentos en la colección `mail` y son procesados por la Cloud Function `onMailCreated`.
+
+---
+
+## Empresas y ofertas
+
+La plataforma cuenta con 11 empresas de 10 sectores diferentes y 57+ ofertas laborales:
+
+| Empresa | Sector | Ofertas |
+|---------|--------|---------|
+| Google | Tecnología | 20 |
+| MediVida | Salud | 4 |
+| EduFuturo | Educación | 4 |
+| ConstruPro Colombia | Construcción | 4 |
+| FinanPlus | Finanzas | 4 |
+| Creativos LAT | Marketing y Publicidad | 4 |
+| LogiExpress | Logística y Transporte | 4 |
+| Sabor & Arte Restaurantes | Gastronomía | 3 |
+| Rodríguez & Asociados | Legal | 3 |
+| AgroVerde del Campo | Agroindustria | 3 |
+| SolEnergía Renovable | Energía Renovable | 4 |
 
 ---
 
 ## Colecciones de Firestore
 
-### 1. `companies`
-Datos de las empresas que publican ofertas laborales.
-
+### `companies`
 | Field | Type | Description |
 |-------|------|-------------|
-| `id` | `string` | Firebase UID |
-| `commercial_name` | `string` | Nombre comercial o de marca |
-| `business_bio` | `string` | Descripción corta de la empresa |
-| `industry_sector` | `string` | Ej: `"Technology"`, `"Healthcare"` |
-| `tax_id_type` | `string` | Ej: `"NIT"`, `"RUT"` |
-| `tax_id_number` | `string` | Número de identificación tributaria |
-| `logo_url` | `string` | URL pública del logo de la empresa |
-| `website_url` | `string` | Sitio web de la empresa |
-| `created_at` | `timestamp` | Fecha de creación de la cuenta |
+| `commercial_name` | `string` | Nombre comercial |
+| `business_bio` | `string` | Descripción de la empresa |
+| `industry_sector` | `string` | Sector industrial |
+| `tax_id_type` | `string` | Tipo de identificación tributaria |
+| `tax_id_number` | `string` | Número tributario |
+| `logo_url` | `string` | URL del logo en Storage |
+| `website_url` | `string` | Sitio web |
+| `created_at` | `timestamp` | Fecha de creación |
 
----
-
-### 2. `company_users`
-Administradores y reclutadores que pertenecen a una empresa.
-
+### `company_users`
 | Field | Type | Description |
 |-------|------|-------------|
-| `id` | `string` | Firebase UID |
 | `company_id` | `string` | Referencia a `companies` |
-| `full_name` | `string` | Nombre del reclutador |
-| `email` | `string` | Correo electrónico de trabajo |
+| `full_name` | `string` | Nombre del usuario |
+| `email` | `string` | Correo electrónico |
 | `role` | `string` | `"admin"` o `"recruiter"` |
-| `created_at` | `timestamp` | Fecha de creación de la cuenta |
+| `created_at` | `timestamp` | Fecha de creación |
 
----
-
-### 3. `company_invitations`
-Invitaciones pendientes enviadas por un admin a nuevos usuarios de la empresa.
-
+### `company_invitations`
 | Field | Type | Description |
 |-------|------|-------------|
-| `id` | `string` | ID generado automáticamente |
 | `company_id` | `string` | Referencia a `companies` |
-| `invited_by` | `string` | Referencia a `company_users` (admin que envió la invitación) |
+| `invited_by` | `string` | UID del admin que invitó |
 | `email` | `string` | Correo del invitado |
-| `role` | `string` | Rol asignado al aceptar: `"admin"` o `"recruiter"` |
-| `status` | `string` | `"Pending"`, `"Accepted"` o `"Expired"` |
-| `expires_at` | `timestamp` | Fecha de vencimiento de la invitación |
-| `created_at` | `timestamp` | Fecha en que se envió la invitación |
+| `role` | `string` | Rol asignado |
+| `status` | `string` | `"Pending"`, `"Accepted"` |
+| `expires_at` | `timestamp` | Fecha de vencimiento (7 días) |
+| `created_at` | `timestamp` | Fecha de envío |
 
----
-
-### 4. `candidates`
-Datos de los candidatos que buscan empleo.
-
+### `candidates`
 | Field | Type | Description |
 |-------|------|-------------|
-| `id` | `string` | Firebase UID |
-| `first_name` | `string` | Nombre del candidato |
-| `last_name` | `string` | Apellido del candidato |
-| `email` | `string` | Correo electrónico de contacto |
-| `phone` | `string` | Teléfono de contacto |
-| `identification_type` | `string` | `"CC"`, `"CE"` o `"Passport"` |
-| `identification_number` | `string` | Número del documento de identidad |
-| `city` | `string` | Ciudad de residencia actual |
-| `country` | `string` | País de residencia |
-| `profile_completion_pct` | `number` | Porcentaje de perfil completado (0–100), se actualiza al guardar |
-| `created_at` | `timestamp` | Fecha de creación de la cuenta |
+| `first_name` | `string` | Nombre |
+| `last_name` | `string` | Apellido |
+| `email` | `string` | Correo electrónico |
+| `phone` | `string` | Teléfono |
+| `identification_type` | `string` | Tipo de documento |
+| `identification_number` | `string` | Número de documento |
+| `city` | `string` | Ciudad |
+| `country` | `string` | País |
+| `avatar_url` | `string` | URL de foto de perfil |
+| `profile_completion_pct` | `number` | Porcentaje de completitud (0-100) |
+| `created_at` | `timestamp` | Fecha de creación |
 
----
-
-### 5. `candidate_resumes`
-Hojas de vida subidas por el candidato. Cada documento es procesado por Gemini API al momento de la carga.
-
+### `candidate_resumes`
 | Field | Type | Description |
 |-------|------|-------------|
-| `id` | `string` | ID generado automáticamente |
 | `candidate_id` | `string` | Referencia a `candidates` |
-| `name` | `string` | Nombre que el candidato le da a esta hoja de vida |
-| `document_url` | `string` | URL de Firebase Storage del archivo subido |
-| `extracted_data` | `map` | Información básica extraída por Gemini (ver detalle abajo) |
-| `suggestions` | `array` | Lista de recomendaciones de mejora generadas por Gemini |
+| `name` | `string` | Nombre del CV |
+| `document_url` | `string` | URL del archivo en Storage |
+| `extracted_data` | `map` | Datos extraídos por Gemini: `full_name`, `email`, `phone`, `skills[]`, `experience[]`, `education[]`, `summary` |
+| `suggestions` | `array` | Recomendaciones de mejora del CV |
 | `created_at` | `timestamp` | Fecha de carga |
-| `updated_at` | `timestamp` | Última vez que Gemini reprocesó o el usuario actualizó el documento |
 
-#### `extracted_data` — campos extraídos por Gemini
-
+### `job_offers`
 | Field | Type | Description |
 |-------|------|-------------|
-| `full_name` | `string` | Nombre detectado en el documento |
-| `email` | `string` | Correo detectado en el documento |
-| `phone` | `string` | Teléfono detectado en el documento |
-| `skills` | `array` | Lista de habilidades identificadas |
-| `experience` | `array` | Experiencia laboral (cargo, empresa, años) |
-| `education` | `array` | Estudios (título, institución) |
-| `summary` | `string` | Resumen profesional extraído del documento |
-
----
-
-### 6. `job_offers`
-Ofertas laborales publicadas por las empresas.
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | `string` | ID generado automáticamente |
 | `company_id` | `string` | Referencia a `companies` |
 | `title` | `string` | Título del cargo |
-| `description` | `string` | Descripción completa del puesto |
-| `benefits` | `array` | Lista de beneficios ofrecidos |
-| `work_modality` | `string` | `"Remote"`, `"On-site"` o `"Hybrid"` |
-| `status` | `string` | `"Active"`, `"Paused"` o `"Closed"` |
-| `min_salary` | `number` | Salario mínimo ofrecido |
-| `max_salary` | `number` | Salario máximo ofrecido |
-| `years_experience_required` | `number` | Años mínimos de experiencia requeridos |
-| `max_applicants` | `number` | Número máximo de aplicaciones aceptadas |
-| `country` | `string` | País donde está basado el puesto |
-| `required_test_id` | `string` | Referencia a `tests` (opcional) |
-| `application_deadline` | `timestamp` | Fecha límite para aplicar |
-| `created_at` | `timestamp` | Fecha en que se publicó la oferta |
+| `description` | `string` | Descripción del puesto |
+| `work_modality` | `string` | `"Remote"`, `"On-site"`, `"Hybrid"` |
+| `status` | `string` | `"Active"`, `"Paused"`, `"Closed"` |
+| `country` | `string` | País |
+| `min_salary` | `number` | Salario mínimo |
+| `max_salary` | `number` | Salario máximo |
+| `years_experience_required` | `number` | Años de experiencia |
+| `max_applicants` | `number` | Máximo de aplicantes |
+| `benefits` | `array` | Lista de beneficios |
+| `required_test_id` | `string` | Test asignado (opcional) |
+| `required_skills` | `array` | Skills requeridas |
+| `required_languages` | `array` | Idiomas requeridos |
+| `min_education` | `string` | Nivel educativo mínimo |
+| `application_deadline` | `timestamp` | Fecha límite |
+| `created_at` | `timestamp` | Fecha de publicación |
 
----
-
-### 7. `tests`
-Catálogo de evaluaciones psicométricas y técnicas disponibles.
-
+### `applications`
 | Field | Type | Description |
 |-------|------|-------------|
-| `id` | `string` | Ej: `"big_five_v1"` |
-| `name` | `string` | Nombre legible del test |
-| `instructions` | `string` | Instrucciones que se muestran al candidato |
-| `duration_minutes` | `number` | Tiempo disponible para completar el test |
-
----
-
-### 8. `applications`
-Vincula a un candidato con una oferta laboral (una por candidato por oferta). Se crea como borrador en el primer paso y se actualiza en tiempo real en cada paso siguiente.
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | `string` | ID generado automáticamente |
 | `candidate_id` | `string` | Referencia a `candidates` |
 | `job_offer_id` | `string` | Referencia a `job_offers` |
-| `resume_id` | `string` | Referencia a `candidate_resumes` seleccionada para esta aplicación |
+| `resume_id` | `string` | CV seleccionado |
 | `status` | `string` | `"Draft"`, `"Pending"`, `"Reviewed"`, `"Testing"`, `"Rejected"`, `"Hired"` |
-| `current_step` | `string` | `"cv_selection"`, `"fit_check"`, `"test"` o `"submitted"` |
-| `fit_check` | `map` | Resultado de la validación de Gemini (ver detalle abajo) |
-| `reviewer_id` | `string` | Referencia a `company_users` asignado a esta aplicación (opcional) |
-| `feedback_to_candidate` | `string` | Comentario del reclutador visible para el candidato (opcional) |
-| `applied_at` | `timestamp` | Fecha en que el candidato envió la aplicación completa |
-| `updated_at` | `timestamp` | Última actualización en tiempo real (se actualiza en cada cambio de paso) |
+| `pipeline_stage` | `string` | `"received"`, `"reviewing"`, `"interview"`, `"technical"`, `"offer"`, `"hired"`, `"rejected"` |
+| `stage_history` | `map` | Timestamps por cada etapa |
+| `current_step` | `string` | Paso actual del flujo de aplicación |
+| `fit_check` | `map` | Resultado: `passed`, `score`, `feedback`, `experience_score`, `skills_score`, `education_score`, `skills_matched[]`, `skills_missing[]`, `strengths[]`, `improvements[]` |
+| `reviewer_id` | `string` | Reclutador asignado |
+| `feedback_to_candidate` | `string` | Feedback visible al candidato |
+| `internal_notes` | `array` | Notas internas del equipo |
+| `applied_at` | `timestamp` | Fecha de envío |
+| `updated_at` | `timestamp` | Última actualización |
 
-#### `fit_check` — resultado de validación de Gemini
-
+### `test_results`
 | Field | Type | Description |
 |-------|------|-------------|
-| `passed` | `boolean` | Si el candidato cumple los requisitos mínimos de la oferta |
-| `score` | `number` | Porcentaje de compatibilidad estimado por Gemini (0–100) |
-| `feedback` | `string` | Explicación de Gemini (se muestra al candidato si no aprobó) |
-
----
-
-### 9. `test_results`
-Puntaje y metadatos de un test completado.
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | `string` | ID generado automáticamente |
 | `application_id` | `string` | Referencia a `applications` |
-| `test_id` | `string` | Referencia a `tests` |
-| `score` | `number` | Puntaje general (0–100) |
-| `trait_scores` | `map` | Desglose por dimensión (ver detalle abajo) |
-| `gemini_evaluation` | `map` | Evaluación cualitativa generada por Gemini (ver abajo) |
-| `completed_at` | `timestamp` | Fecha y hora en que se envió el test |
+| `test_id` | `string` | ID del test completado |
+| `score` | `number` | Score general (0-100) |
+| `trait_scores` | `map` | Scores por dimensión |
+| `gemini_evaluation` | `map` | `passed`, `score`, `feedback` |
+| `video_url` | `string` | URL del video de entrevista |
+| `transcript` | `array` | Transcripción de la entrevista |
+| `completed_at` | `timestamp` | Fecha de completación |
 
-#### `trait_scores` — dimensiones del Big Five
-
+### `mail`
 | Field | Type | Description |
 |-------|------|-------------|
-| `openness` | `number` | Curiosidad y apertura a nuevas experiencias |
-| `conscientiousness` | `number` | Organización, responsabilidad y disciplina |
-| `extraversion` | `number` | Sociabilidad y asertividad |
-| `agreeableness` | `number` | Cooperación y empatía hacia los demás |
-| `neuroticism` | `number` | Inestabilidad emocional y tendencia al estrés |
+| `to` | `string` | Email destinatario |
+| `message` | `map` | `subject`, `html` |
+| `type` | `string` | `"pipeline_update"`, `"rejection"`, `"invitation"` |
+| `status` | `string` | `"pending"`, `"sent"`, `"error"` |
+| `metadata` | `map` | Datos contextuales del email |
+| `created_at` | `timestamp` | Fecha de creación |
 
-#### `gemini_evaluation` — evaluación cualitativa de la IA
-
+### `notifications`
 | Field | Type | Description |
 |-------|------|-------------|
-| `passed` | `boolean` | Si el resultado supera el umbral mínimo definido por la empresa |
-| `score` | `number` | Puntaje general asignado por Gemini (0–100) |
-| `feedback` | `string` | Resumen narrativo de fortalezas y áreas de mejora |
+| `candidate_id` | `string` | Referencia a `candidates` |
+| `type` | `string` | `"status_change"`, `"hired"`, `"rejected"` |
+| `title` | `string` | Título de la notificación |
+| `body` | `string` | Contenido |
+| `read` | `boolean` | Si fue leída |
+| `created_at` | `timestamp` | Fecha de creación |
 
 ---
 
 ## Características principales
 
-- **Dark / Light mode** — Detecta preferencia del sistema, persiste en `localStorage`
-- **Bilingüe (ES/EN)** — Detecta idioma del navegador, cambio manual disponible
-- **100% responsive** — Sidebar colapsable en móvil para ambos portales
-- **Flujo de aplicación reanudable** — Guarda `current_step` en Firestore en tiempo real
-- **Gemini AI** — Extrae datos de HV, valida compatibilidad y evalúa tests automáticamente
-- **Guards de ruta** — Empresa y candidato no pueden acceder al portal contrario
-- **Progreso de perfil** — Barra de 0–100% (60% datos básicos + 40% al menos una HV)
+- **Entrevista AI en vivo** — Agente "Ana" con audio/video bidireccional via Gemini Live API
+- **Fit Check AI** — Scoring automático CV vs oferta con desglose por dimensión
+- **Pipeline visual** — 7 estados con notificaciones automáticas por email
+- **Reporte PDF** — Descargable con evaluación completa del candidato
+- **4 tests psicotécnicos** — Big Five, IE, Cognitivo, SJT (cubiertos en la entrevista)
+- **11 empresas, 10 sectores** — Salud, Educación, Construcción, Finanzas, Marketing, Logística, Gastronomía, Legal, Agroindustria, Energía
+- **Google OAuth** — Login unificado sin contraseñas
+- **Dark / Light mode** — Detecta preferencia del sistema
+- **Bilingüe (ES/EN)** — Detecta idioma del navegador
+- **100% responsive** — Funciona en desktop y móvil
+- **Compartición de ofertas** — Links públicos con Open Graph meta
+- **Notas internas** — Colaboración del equipo de reclutamiento
+- **WhatsApp directo** — Link a WhatsApp del candidato desde el detalle
+
+---
+
+## Autores
+
+- **Jesús David Vargas Guerra** — Desarrollador full-stack (React, JavaScript, Firebase)
+- **Gustavo Andrés Avila Muñoz** — Desarrollador / documentación y validación
+
+**Universidad del Sinú — Elías Bechara Zainúm**
+Programa de Ingeniería de Sistemas
+Montería, Córdoba — 2026
