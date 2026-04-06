@@ -21,6 +21,11 @@ dist-ssr
 # Claude Code
 .claude/
 
+# Documents
+*.pdf
+*.docx
+Anteproyecto_*
+
 # Editor directories and files
 .vscode
 !.vscode/extensions.json

@@ -523,6 +523,14 @@
       "ei": {
         "name": "Emotional Intelligence",
         "desc": "Evaluates the 5 EI dimensions: Self-Awareness, Self-Regulation, Motivation, Empathy, and Social Skills."
+      },
+      "cognitive": {
+        "name": "Cognitive Reasoning",
+        "desc": "Evaluates 5 cognitive aptitudes: Verbal Reasoning, Numerical Reasoning, Logical Reasoning, Pattern Recognition, and Critical Thinking."
+      },
+      "sjt": {
+        "name": "Situational Judgment (SJT)",
+        "desc": "Evaluates decision-making across 8 real workplace scenarios: Decision Making, Conflict Resolution, Prioritization, Teamwork, Ethics, Leadership, Customer Orientation, and Adaptability."
       }
     },
     "dimensions": {
@@ -535,12 +543,35 @@
       "self_regulation": "Self-Regulation",
       "motivation": "Motivation",
       "empathy": "Empathy",
-      "social_skills": "Social Skills"
+      "social_skills": "Social Skills",
+      "verbal_reasoning": "Verbal Reasoning",
+      "numerical_reasoning": "Numerical Reasoning",
+      "logical_reasoning": "Logical Reasoning",
+      "pattern_recognition": "Pattern Recognition",
+      "critical_thinking": "Critical Thinking",
+      "decision_making": "Decision Making",
+      "conflict_resolution": "Conflict Resolution",
+      "prioritization": "Prioritization",
+      "teamwork": "Teamwork",
+      "ethics": "Professional Ethics",
+      "leadership": "Leadership",
+      "customer_orientation": "Customer Orientation",
+      "adaptability": "Adaptability"
     },
     "likert": {
       "stronglyDisagree": "Strongly disagree",
+      "disagree": "Disagree",
+      "neutral": "Neutral",
+      "agree": "Agree",
       "stronglyAgree": "Strongly agree"
-    }
+    },
+    "generating": "Generating questions with AI...",
+    "evaluating": "Evaluating your answers...",
+    "questionOf": "Question {{current}} of {{total}}",
+    "submit": "Submit answers",
+    "startTest": "Start psychometric test",
+    "noTestRequired": "No test required",
+    "noTestDesc": "This job offer doesn't have a psychometric test assigned. You can proceed directly to the interview."
   },
   "common": {
     "loading": "Loading...",

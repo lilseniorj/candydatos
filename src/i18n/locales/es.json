@@ -523,6 +523,14 @@
       "ei": {
         "name": "Inteligencia Emocional",
         "desc": "Evalúa las 5 dimensiones de IE: Autoconciencia, Autorregulación, Motivación, Empatía y Habilidades Sociales."
+      },
+      "cognitive": {
+        "name": "Razonamiento Cognitivo",
+        "desc": "Evalúa 5 aptitudes cognitivas: Razonamiento Verbal, Numérico, Lógico, Reconocimiento de Patrones y Pensamiento Crítico."
+      },
+      "sjt": {
+        "name": "Juicio Situacional (SJT)",
+        "desc": "Evalúa la toma de decisiones en 8 escenarios laborales reales: Decisión, Conflictos, Priorización, Trabajo en Equipo, Ética, Liderazgo, Orientación al Cliente y Adaptabilidad."
       }
     },
     "dimensions": {
@@ -535,12 +543,35 @@
       "self_regulation": "Autorregulación",
       "motivation": "Motivación",
       "empathy": "Empatía",
-      "social_skills": "Habilidades Sociales"
+      "social_skills": "Habilidades Sociales",
+      "verbal_reasoning": "Razonamiento Verbal",
+      "numerical_reasoning": "Razonamiento Numérico",
+      "logical_reasoning": "Razonamiento Lógico",
+      "pattern_recognition": "Reconocimiento de Patrones",
+      "critical_thinking": "Pensamiento Crítico",
+      "decision_making": "Toma de Decisiones",
+      "conflict_resolution": "Resolución de Conflictos",
+      "prioritization": "Priorización",
+      "teamwork": "Trabajo en Equipo",
+      "ethics": "Ética Profesional",
+      "leadership": "Liderazgo",
+      "customer_orientation": "Orientación al Cliente",
+      "adaptability": "Adaptabilidad"
     },
     "likert": {
       "stronglyDisagree": "Muy en desacuerdo",
+      "disagree": "En desacuerdo",
+      "neutral": "Neutral",
+      "agree": "De acuerdo",
       "stronglyAgree": "Muy de acuerdo"
-    }
+    },
+    "generating": "Generando preguntas con IA...",
+    "evaluating": "Evaluando tus respuestas...",
+    "questionOf": "Pregunta {{current}} de {{total}}",
+    "submit": "Enviar respuestas",
+    "startTest": "Iniciar test psicotécnico",
+    "noTestRequired": "No se requiere test",
+    "noTestDesc": "Esta oferta no tiene un test psicotécnico asignado. Puedes continuar directamente a la entrevista."
   },
   "common": {
     "loading": "Cargando...",

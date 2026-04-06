@@ -25,6 +25,26 @@ export const TEST_CATALOG = [
     question_count: 5,
     dimensions: ['self_awareness', 'self_regulation', 'motivation', 'empathy', 'social_skills'],
   },
+  {
+    id: 'cognitive_reasoning_v1',
+    type: 'cognitive_reasoning',
+    nameKey: 'tests.catalog.cognitive.name',
+    descKey: 'tests.catalog.cognitive.desc',
+    icon: '🔢',
+    duration_minutes: 20,
+    question_count: 10,
+    dimensions: ['verbal_reasoning', 'numerical_reasoning', 'logical_reasoning', 'pattern_recognition', 'critical_thinking'],
+  },
+  {
+    id: 'situational_judgment_v1',
+    type: 'situational_judgment',
+    nameKey: 'tests.catalog.sjt.name',
+    descKey: 'tests.catalog.sjt.desc',
+    icon: '⚖️',
+    duration_minutes: 20,
+    question_count: 8,
+    dimensions: ['decision_making', 'conflict_resolution', 'prioritization', 'teamwork', 'ethics', 'leadership', 'customer_orientation', 'adaptability'],
+  },
 ]
 
 export function getTestById(id) {

@@ -9,6 +9,7 @@ import { sendRejectionEmail, sendPipelineEmail, createNotification } from '../..
 import { getJob } from '../../services/jobs'
 import { getResumesByCandidate } from '../../services/resumes'
 import { getTestResultsByApplication } from '../../services/testResults'
+import { generateCandidateReport } from '../../services/reportPdf'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import Modal from '../../components/ui/Modal'
@@ -317,6 +318,12 @@ export default function ApplicantDetail() {
           {!isRejected && !isHired && (
             <Button variant="danger" onClick={() => setShowRejectModal(true)}>{t('company.pipeline.reject')}</Button>
           )}
+          <Button variant="secondary" onClick={() => generateCandidateReport({
+            candidate, job, company, fitCheck: app.fit_check, testResults,
+            resumeData: resume?.extracted_data, combinedScore,
+          })}>
+            📄 PDF
+          </Button>
           {isHired && (
             <div className="px-4 py-2 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-sm font-medium">
               ✅ {t('company.pipeline.hired')}

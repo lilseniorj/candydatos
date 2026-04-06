@@ -175,7 +175,7 @@ Return ONLY valid JSON.
 
 /**
  * Generate questions for a psychometric test using Gemini.
- * @param {'big_five'|'emotional_intelligence'} testType
+ * @param {'big_five'|'emotional_intelligence'|'cognitive_reasoning'|'situational_judgment'} testType
  * @param {string} jobTitle   – title of the job offer for context
  * @param {string} lang       – 'es' | 'en'
  * @param {string} [extra]    – optional custom instructions from the company
@@ -183,11 +183,12 @@ Return ONLY valid JSON.
 export async function generateTestQuestions(testType, jobTitle, lang = 'es', extra = '') {
   console.info(TAG, `generateTestQuestions() called — type: ${testType}, job: "${jobTitle}", lang: ${lang}`)
   const langLabel = lang === 'es' ? 'Spanish' : 'English'
+  const extraCtx = extra ? `Additional context from the company: ${extra}` : ''
 
   if (testType === 'big_five') {
     return ask(`
 You are an expert organizational psychologist. Generate exactly 10 Big Five (OCEAN) personality statements for a candidate applying to a "${jobTitle}" position.
-${extra ? `Additional context from the company: ${extra}` : ''}
+${extraCtx}
 
 RULES:
 - 2 statements per trait: openness, conscientiousness, extraversion, agreeableness, neuroticism
@@ -214,10 +215,10 @@ Return ONLY valid JSON.
 `)
   }
 
-  // emotional_intelligence
-  return ask(`
+  if (testType === 'emotional_intelligence') {
+    return ask(`
 You are an expert psychologist specializing in Emotional Intelligence (EI). Generate exactly 5 realistic workplace scenarios for a candidate applying to a "${jobTitle}" position.
-${extra ? `Additional context from the company: ${extra}` : ''}
+${extraCtx}
 
 RULES:
 - 1 scenario per EI dimension: self_awareness, self_regulation, motivation, empathy, social_skills
@@ -244,6 +245,81 @@ Return ONLY a valid JSON object:
 }
 Return ONLY valid JSON.
 `)
+  }
+
+  if (testType === 'cognitive_reasoning') {
+    return ask(`
+You are an expert psychometrician specializing in cognitive aptitude assessments. Generate exactly 10 cognitive reasoning questions for a candidate applying to a "${jobTitle}" position.
+${extraCtx}
+
+RULES:
+- 2 questions per dimension: verbal_reasoning, numerical_reasoning, logical_reasoning, pattern_recognition, critical_thinking
+- Each question has 4 options (A–D) with exactly ONE correct answer
+- Verbal reasoning: analogies, reading comprehension, word relationships
+- Numerical reasoning: number series, percentages, data interpretation (use simple numbers)
+- Logical reasoning: syllogisms, deductive logic, if-then statements
+- Pattern recognition: sequences, series completion, odd-one-out
+- Critical thinking: argument evaluation, identifying assumptions, drawing conclusions
+- Questions must be professional, clear, and relevant to the job context where possible
+- Difficulty: moderate (suitable for professional roles)
+- Write everything in ${langLabel}
+
+Return ONLY a valid JSON object:
+{
+  "questions": [
+    {
+      "id": "c1",
+      "text": "question text",
+      "options": [
+        { "key": "A", "text": "option A" },
+        { "key": "B", "text": "option B" },
+        { "key": "C", "text": "option C" },
+        { "key": "D", "text": "option D" }
+      ],
+      "correct": "B",
+      "dimension": "verbal_reasoning"
+    }
+  ]
+}
+Return ONLY valid JSON.
+`)
+  }
+
+  // situational_judgment
+  return ask(`
+You are an expert in industrial-organizational psychology specializing in Situational Judgment Tests (SJT). Generate exactly 8 realistic workplace scenarios for a candidate applying to a "${jobTitle}" position.
+${extraCtx}
+
+RULES:
+- 1 scenario per dimension: decision_making, conflict_resolution, prioritization, teamwork, ethics, leadership, customer_orientation, adaptability
+- Each scenario presents a challenging but realistic workplace situation specific to the role
+- Each scenario has 4 response options (A–D) that represent different approaches, from least effective to most effective
+- Options should NOT be obviously bad — they should represent plausible approaches that differ in effectiveness
+- The "best" answer reflects sound professional judgment, not just the "nice" answer
+- Situations must feel realistic, specific, and relevant to the "${jobTitle}" role
+- Write everything in ${langLabel}
+
+Return ONLY a valid JSON object:
+{
+  "questions": [
+    {
+      "id": "j1",
+      "situation": "3–4 sentence detailed workplace scenario relevant to the role",
+      "question": "What would be the most appropriate course of action?",
+      "options": [
+        { "key": "A", "text": "response option A", "effectiveness": 1 },
+        { "key": "B", "text": "response option B", "effectiveness": 2 },
+        { "key": "C", "text": "response option C", "effectiveness": 3 },
+        { "key": "D", "text": "response option D", "effectiveness": 4 }
+      ],
+      "dimension": "decision_making"
+    }
+  ]
+}
+
+IMPORTANT: The "effectiveness" field rates each option from 1 (least effective) to 4 (most effective). Shuffle the order of options so the best answer is NOT always D.
+Return ONLY valid JSON.
+`)
 }
 
 // ─── Dynamic test evaluation ─────────────────────────────────────────────────
@@ -254,6 +330,7 @@ Return ONLY valid JSON.
  */
 export async function evaluateTestAnswers(testType, testName, questions, answers) {
   console.info(TAG, `evaluateTestAnswers() called — type: ${testType}, test: "${testName}", questions: ${questions?.length}, answers: ${Object.keys(answers || {}).length}`)
+
   if (testType === 'big_five') {
     const lines = questions.map(q =>
       `Trait: ${q.trait} | Statement: "${q.text}" | Rating: ${answers[q.id] ?? 3}/5`
@@ -282,12 +359,12 @@ Return ONLY valid JSON.
 `)
   }
 
-  // emotional_intelligence
-  const lines = questions.map(q =>
-    `Dimension: ${q.dimension}\nSituation: "${q.situation}"\nChosen: ${answers[q.id]}\nOptions: ${q.options.map(o => `${o.key}: ${o.text}`).join(' | ')}`
-  ).join('\n\n')
+  if (testType === 'emotional_intelligence') {
+    const lines = questions.map(q =>
+      `Dimension: ${q.dimension}\nSituation: "${q.situation}"\nChosen: ${answers[q.id]}\nOptions: ${q.options.map(o => `${o.key}: ${o.text}`).join(' | ')}`
+    ).join('\n\n')
 
-  return ask(`
+    return ask(`
 You are an expert psychologist specializing in Emotional Intelligence. Evaluate the following EI assessment for a "${testName}" test.
 
 RESPONSES:
@@ -304,6 +381,72 @@ Return ONLY a valid JSON object:
     "motivation": number 0–100,
     "empathy": number 0–100,
     "social_skills": number 0–100
+  }
+}
+Return ONLY valid JSON.
+`)
+  }
+
+  if (testType === 'cognitive_reasoning') {
+    const lines = questions.map(q => {
+      const chosen = answers[q.id]
+      const isCorrect = chosen === q.correct
+      return `Dimension: ${q.dimension} | Question: "${q.text}" | Chosen: ${chosen} | Correct: ${q.correct} | ${isCorrect ? 'CORRECT' : 'INCORRECT'}`
+    }).join('\n')
+
+    const totalCorrect = questions.filter(q => answers[q.id] === q.correct).length
+
+    return ask(`
+You are an expert psychometrician. Evaluate the following Cognitive Reasoning assessment for a "${testName}" test.
+
+RESPONSES (${totalCorrect}/${questions.length} correct):
+${lines}
+
+Return ONLY a valid JSON object:
+{
+  "passed": true or false (true if score >= 50),
+  "score": number 0–100 (based on correct answers and dimension balance),
+  "feedback": "constructive narrative about cognitive strengths and areas to develop (2–3 sentences)",
+  "trait_scores": {
+    "verbal_reasoning": number 0–100,
+    "numerical_reasoning": number 0–100,
+    "logical_reasoning": number 0–100,
+    "pattern_recognition": number 0–100,
+    "critical_thinking": number 0–100
+  }
+}
+Return ONLY valid JSON.
+`)
+  }
+
+  // situational_judgment
+  const lines = questions.map(q => {
+    const chosen = answers[q.id]
+    const chosenOpt = q.options.find(o => o.key === chosen)
+    const bestOpt = q.options.reduce((a, b) => (a.effectiveness > b.effectiveness ? a : b))
+    return `Dimension: ${q.dimension}\nSituation: "${q.situation}"\nChosen: ${chosen} — "${chosenOpt?.text}" (effectiveness: ${chosenOpt?.effectiveness}/4)\nBest: ${bestOpt.key} — "${bestOpt.text}" (effectiveness: 4/4)\nAll options: ${q.options.map(o => `${o.key}(eff:${o.effectiveness}): ${o.text}`).join(' | ')}`
+  }).join('\n\n')
+
+  return ask(`
+You are an expert in industrial-organizational psychology. Evaluate the following Situational Judgment Test for a "${testName}" test.
+
+RESPONSES:
+${lines}
+
+Return ONLY a valid JSON object:
+{
+  "passed": true or false (true if score >= 50),
+  "score": number 0–100 (based on effectiveness of chosen responses across all dimensions),
+  "feedback": "constructive narrative about judgment strengths and development areas (2–3 sentences)",
+  "trait_scores": {
+    "decision_making": number 0–100,
+    "conflict_resolution": number 0–100,
+    "prioritization": number 0–100,
+    "teamwork": number 0–100,
+    "ethics": number 0–100,
+    "leadership": number 0–100,
+    "customer_orientation": number 0–100,
+    "adaptability": number 0–100
   }
 }
 Return ONLY valid JSON.

@@ -186,11 +186,20 @@ export default function JobBoard() {
           <div className="flex-1 min-w-0">
             <Input placeholder={t('candidate.jobs.search')} value={search} onChange={e => setSearch(e.target.value)} />
           </div>
-          <Select value={country} onChange={e => setCountry(e.target.value)} className="w-32"
+          <Select value={country} onChange={e => setCountry(e.target.value)} className="w-32 hidden sm:block"
             options={[{ value: '', label: t('candidate.jobs.country') }, ...countries.map(c => ({ value: c, label: c }))]} />
           <Select value={modality} onChange={e => setModality(e.target.value)} className="w-32 hidden sm:block"
             options={modalities} />
           <Select value={sortBy} onChange={e => setSortBy(e.target.value)} className="w-36 hidden md:block"
+            options={[{ value: 'date', label: t('candidate.jobs.sortDate') }, { value: 'salary', label: t('candidate.jobs.sortSalary') }]} />
+        </div>
+        {/* Mobile filters */}
+        <div className="flex items-center gap-2 mt-2 sm:hidden">
+          <Select value={country} onChange={e => setCountry(e.target.value)} className="flex-1"
+            options={[{ value: '', label: t('candidate.jobs.country') }, ...countries.map(c => ({ value: c, label: c }))]} />
+          <Select value={modality} onChange={e => setModality(e.target.value)} className="flex-1"
+            options={modalities} />
+          <Select value={sortBy} onChange={e => setSortBy(e.target.value)} className="flex-1"
             options={[{ value: 'date', label: t('candidate.jobs.sortDate') }, { value: 'salary', label: t('candidate.jobs.sortSalary') }]} />
         </div>
         {!canApply && (
